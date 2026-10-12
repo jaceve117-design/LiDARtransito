@@ -1,64 +1,13 @@
-// Schematic, not a survey: change this file when street directions and geometry are verified.
-export const CONFIG = {
-  label: 'Casco central de Heredia',
-  geometry: 'Esquema provisional basado en la imagen aportada. Sin escala cartográfica.',
-  metersPerUnit: 1.25,
-  speed: 11.11,
-  carLength: 4.5,
-  minGap: 2.5,
-  yellow: 3,
-  allRed: 1,
-  dt: 0.2,
-};
-export function createNetwork() {
-  const nodes = [], edges = [], byId = new Map(), outgoing = new Map();
-  const xs = [175, 320, 465, 610, 755, 900], ys = [145, 265, 385, 505, 625];
-  for (let row = 0; row < ys.length; row++) for (let col = 0; col < xs.length; col++) {
-    const id = `n${row}-${col}`;
-    const names = { 'n2-5': 'Pirro', 'n3-3': 'Estación Heredia', 'n4-2': 'Hospital', 'n2-0': 'Salida San Joaquín', 'n1-2': 'Centro norte', 'n2-3': 'Centro', 'n3-1': 'Centro oeste', 'n4-4': 'Centro sur' };
-    const signal = (row === 2 || row === 3 || row === 4 && col === 2 || row === 1 && col === 2);
-    const n = { id, x: xs[col] + row * 5, y: ys[row] + col * 3, row, col, name: names[id] || `Cruce ${row + 1}.${col + 1}`, signal, boundary: false };
-    nodes.push(n); byId.set(id,n); outgoing.set(id,[]);
-  }
-  function edge(from,to) {
-    const a=byId.get(from),b=byId.get(to),length=Math.hypot(a.x-b.x,a.y-b.y)*CONFIG.metersPerUnit;
-    const e={id:`${from}>${to}`,from,to,length,axis:Math.abs(a.x-b.x)>Math.abs(a.y-b.y)?'H':'V'};
-    edges.push(e);outgoing.get(from).push(e);
-  }
-  function pair(a,b) { edge(a,b);edge(b,a); }
-  for (const n of [...nodes]) {
-    if(n.col<5){const other=`n${n.row}-${n.col+1}`;if(n.row===0||n.row===4)pair(n.id,other);else if(n.row%2)edge(n.id,other);else edge(other,n.id);}
-    if(n.row<4){const other=`n${n.row+1}-${n.col}`;if(n.col===0||n.col===5)pair(n.id,other);else if(n.col%2)edge(n.id,other);else edge(other,n.id);}
-  }
-  const boundaries=[];
-  function boundary(id,target,x,y,side,name) {
-    const n={id,x,y,side,name,boundary:true,signal:false};nodes.push(n);byId.set(id,n);outgoing.set(id,[]);boundaries.push(n);pair(id,target);
-  }
-  for(let r=0;r<5;r++) {
-    boundary(`W${r}`,`n${r}-0`,45,ys[r]+r*0, 'O','Oeste · hacia San Joaquín');
-    boundary(`E${r}`,`n${r}-5`,1100,ys[r]+15,'E','Este · Pirro / San Pablo');
-  }
-  for(let c=0;c<6;c++) {
-    boundary(`N${c}`,`n0-${c}`,xs[c],45,'N','Norte');
-    boundary(`S${c}`,`n4-${c}`,xs[c]+20,750,'S','Sur · entorno hospital');
-  }
-  return { nodes,edges,byId,outgoing,boundaries,edgeById:new Map(edges.map(e=>[e.id,e])) };
+import { MAP } from './network-data.js';
+export { MAP };
+export const CONFIG={label:'Casco central de Heredia',geometry:'Geometría municipal alineada a Heredia.png; sentidos marcados por el usuario.',metersPerUnit:MAP.metersPerUnit,speed:11.11,carLength:4.5,minGap:2.5,yellow:3,allRed:1,stopDistance:6,dt:.2};
+export function createNetwork(){const {nodes,edges}=MAP,byId=new Map(nodes.map(n=>[n.id,n])),outgoing=new Map(nodes.map(n=>[n.id,[]])),incoming=new Map(nodes.map(n=>[n.id,[]]));for(const e of edges){outgoing.get(e.from).push(e);incoming.get(e.to).push(e);}return {nodes,edges,byId,outgoing,incoming,boundaries:nodes.filter(n=>n.boundary),edgeById:new Map(edges.map(e=>[e.id,e]))};}
+// Heap-based Dijkstra keeps the municipal network interactive at hundreds of junctions.
+export function shortestPath(network,origin,destination,cost=()=>0){
+  const distances=new Map([[origin,0]]),previous=new Map(),heap=[];
+  function push(id,d){const item={id,d};heap.push(item);let i=heap.length-1;while(i){const p=(i-1)>>1;if(heap[p].d<=d)break;heap[i]=heap[p];i=p;}heap[i]=item;}
+  function pop(){const root=heap[0],last=heap.pop();if(heap.length){let i=0;while(true){let c=i*2+1;if(c>=heap.length)break;if(c+1<heap.length&&heap[c+1].d<heap[c].d)c++;if(heap[c].d>=last.d)break;heap[i]=heap[c];i=c;}heap[i]=last;}return root;}
+  push(origin,0);while(heap.length){const {id,d}=pop();if(d!==(distances.get(id)??Infinity))continue;if(id===destination)break;for(const e of network.outgoing.get(id)||[]){if(network.byId.get(e.to).boundary&&e.to!==destination)continue;const next=d+e.length/CONFIG.speed+cost(e);if(next<(distances.get(e.to)??Infinity)){distances.set(e.to,next);previous.set(e.to,e);push(e.to,next);}}}
+  const result=[];let at=destination;while(at!==origin){const e=previous.get(at);if(!e)return [];result.unshift(e.id);at=e.from;}return result;
 }
-export function shortestPath(network,origin,destination,cost=()=>0) {
-  const distances=new Map([[origin,0]]),prev=new Map(),remaining=new Set(network.nodes.map(n=>n.id));
-  while(remaining.size) {
-    let current=null,best=Infinity;
-    for(const id of remaining){const d=distances.get(id)??Infinity;if(d<best){current=id;best=d;}}
-    if(current===null)break;
-    if(current===destination)break;
-    remaining.delete(current);
-    for(const e of network.outgoing.get(current)) {
-      if(network.byId.get(e.to).boundary && e.to!==destination)continue;
-      const d=best+e.length/CONFIG.speed+cost(e);
-      if(d<(distances.get(e.to)??Infinity)){distances.set(e.to,d);prev.set(e.to,e);}
-    }
-  }
-  const result=[];let at=destination;
-  while(at!==origin){const e=prev.get(at);if(!e)return [];result.unshift(e.id);at=e.from;}
-  return result;
-}
+export function pointOnEdge(edge,p,offset=0){let remaining=Math.max(0,Math.min(edge.length,p))/CONFIG.metersPerUnit;const points=edge.points;for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);if(remaining<=length||i===points.length-1){const t=Math.min(1,remaining/Math.max(.001,length));return {x:a[0]+dx*t-dy/length*offset,y:a[1]+dy*t+dx/length*offset,angle:Math.atan2(dy,dx)*180/Math.PI};}remaining-=length;}return {x:points[0][0],y:points[0][1],angle:0};}

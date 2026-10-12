@@ -1,11 +1,13 @@
-# Modelo experimental 0.1
+# Modelo experimental 0.2
+
+La geometría y las restricciones de la red cambiaron en 0.2: consultar [mapa-real.md](mapa-real.md). La instantánea municipal sustituye la malla inicial; la referencia marcada determina los nueve controles.
 
 ## Referencias y alcance
 
 - Imagen local `Captura de pantalla 2026-10-11 201955.png`: Heredia, estación, hospital y río Pirro. Usada para orientar el esquema; no como levantamiento de precisión.
 - `estudio_de_impacto_funcional_y_seguridad_vial_mayo2023_fd.pdf`: Consultores Viales S.A., mayo de 2023, Proyecto Bulevar, promotor Municipalidad de Heredia. Documento de 690 páginas, conservado fuera del sitio y del repositorio.
-- En el PDF, página 11 (paginación impresa 5), sección 1.4, se describe la predominancia de calles unidireccionales y sentidos alternados en el cuadrante central. El prototipo adopta ese patrón general con direcciones supuestas.
-- Páginas 25 y 27 (impresas 19 y 21), secciones 3.1–3.2: el estudio contempla más de 100 intersecciones, aforos por maniobra y cortes de 15 minutos, en periodos de mañana, mediodía y tarde. La versión actual reduce la red a 30 cruces de demostración; no importa ni extrapola esos conteos.
+- En el PDF, página 11 (paginación impresa 5), sección 1.4, se describe la predominancia de calles unidireccionales y sentidos alternados en el cuadrante central. Ese patrón general no determina los sentidos específicos de la versión actual; se usan las flechas aportadas y los demás sentidos quedan sin verificar.
+- Páginas 25 y 27 (impresas 19 y 21), secciones 3.1–3.2: el estudio contempla más de 100 intersecciones, aforos por maniobra y cortes de 15 minutos, en periodos de mañana, mediodía y tarde. La red actual usa geometría municipal; no importa ni extrapola esos conteos.
 - Las condiciones documentadas en 2023 no se consideran condiciones observadas en 2026. El bulevar y los cambios de prioridad propuestos no se incorporan.
 
 ## Parámetros
@@ -14,9 +16,9 @@
 - Velocidad libre: 11,11 m/s (40 km/h).
 - Aceleración: 2,2 m/s². Desaceleración objetivo: 4,5 m/s², con límite adicional de avance para evitar cruzar obstáculos.
 - Longitud física de vehículo: 4,5 m y separación mínima: 2,5 m. Los buses se distinguen visualmente, pero aún comparten la dinámica del automóvil.
-- Distancia supuesta: 1,25 metros por unidad del esquema; no es una escala geográfica validada.
-- Llegadas: proceso Poisson estacionario, demanda total entre 0 y 5.000 veh/h. Accesos uniformes; destinos elegidos en otro lado del perímetro. No es una matriz origen-destino observada.
-- Calles centrales: sentido alternado; perímetro: bidireccional. Un carril por sentido permitido. Las flechas reflejan los sentidos del modelo, no una certificación de la señalización real.
+- Distancias: longitud de las polilíneas municipales en Web Mercator con corrección de escala a la latitud local. El registro visual de la imagen no sustituye un levantamiento topográfico.
+- Llegadas: proceso Poisson estacionario, demanda total entre 0 y 5.000 veh/h. Accesos ponderados para un escenario sintético de estrés; destinos conectados en otro lado del perímetro. No es una matriz origen-destino observada.
+- Tramos marcados: flujo indicado por el usuario. Tramos sin marca: ambos sentidos para el experimento, pendientes de validar. Un carril por sentido simulado.
 - Cruces libres: admisión cuando hay espacio en la calle siguiente; no incluyen resolución física de conflictos ni reglas de prioridad reales.
 - Cruces semaforizados: ejes horizontal y vertical, amarillo de 3 s y despeje de 1 s entre ejes. Un giro puede salir hacia otro eje; no hay fase exclusiva para giro izquierdo.
 - Las rutas minimizan tiempo libre más penalización por cantidad de vehículos en cada tramo. El desvío se recalcula en los cruces; se penaliza el retorno al tramo anterior.

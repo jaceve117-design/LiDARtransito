@@ -1,6 +1,6 @@
 # LiDAR Tránsito
 
-Laboratorio web experimental para observar la distribución vehicular en una red esquemática del casco central de Heredia, desde el entorno del río Pirro hacia el oeste y San Joaquín, con entradas por los cuatro lados.
+Laboratorio web experimental para observar la distribución vehicular en una red vial municipal del casco central de Heredia, desde el entorno del río Pirro hacia el oeste y San Joaquín, con entradas por los cuatro lados.
 
 **Prueba pública:** https://lidar-transito.pages.dev
 
@@ -26,7 +26,10 @@ npm run build
 
 - `public/index.html`: página, controles, indicadores y textos.
 - `public/styles.css`: diseño adaptable a escritorio y teléfono.
-- `public/network.js`: nodos, conexiones, sentidos, distancias supuestas y búsqueda de rutas.
+- `public/network.js`: rutas y posiciones sobre polilíneas; `public/network-data.js`: grafo de la red municipal.
+- `data/`: instantánea municipal y alineación visual; `scripts/prepare-network.mjs` regenera el grafo.
+- `public/maps/`: imagen original marcada y fondo limpio.
+- `docs/mapa-real.md`: fuentes, puntos de control, direcciones pendientes y prompt de edición.
 - `public/simulation.js`: llegadas, colas, señales, movimiento y aprendizaje Q-learning.
 - `public/app.js`: animación SVG, interacción, gráfica y CSV.
 - `tests/simulation.test.mjs`: conectividad, conservación de vehículos, separación, semáforos y reproducibilidad.
@@ -60,10 +63,10 @@ npm run deploy
 
 ## Qué representa esta versión
 
-30 cruces, 14 semáforos de prueba y 22 accesos. La red admite rutas alternativas y bloqueo por ocupación del siguiente tramo. Dos motores reciben la misma lista de llegadas y destinos, con semilla reproducible. El selector cambia qué motor se dibuja; ambos avanzan al mismo tiempo.
+975 tramos de la red municipal, 9 puntos de control marcados por el usuario y 30 accesos en los bordes. La red admite rutas alternativas y bloqueo por ocupación del siguiente tramo. Dos motores reciben la misma lista de llegadas y destinos, con semilla reproducible. El selector cambia qué motor se dibuja; ambos avanzan al mismo tiempo.
 
 **No es un gemelo digital calibrado.** La imagen aportada sirve de referencia visual. El estudio de impacto del proyecto Bulevar, de mayo de 2023, sirve únicamente como referencia histórica: no se aplica la propuesta de bulevar, ni sus escenarios se presentan como la red actual. No se importaron sus aforos como demanda activa.
 
-Los sentidos alternados se inspiran en la descripción general del estudio, pero cada sentido, distancia, cruce y semáforo debe verificarse en campo. La malla no equivale al trazado real ni incluye todas las intersecciones existentes. Los datos mostrados son sintéticos, calculados en cada navegador.
+El trazado se obtiene de una instantánea municipal y se alinea a Heredia.png. Los tramos con flecha respetan el flujo marcado por el usuario. Los sentidos no marcados se ensayan en ambos sentidos y siguen pendientes de verificación; no se afirma que sean bidireccionales en campo. Los tiempos semafóricos también son de prueba. Los datos mostrados son sintéticos, calculados en cada navegador.
 
 Ouster es una referencia de hardware a evaluar, no una integración o patrocinio: https://ouster.com/industry/smart-infrastructure. El simulador no depende de una marca.
