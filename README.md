@@ -30,6 +30,7 @@ npm run build
 - `public/simulation.js`: llegadas, colas, señales, movimiento y aprendizaje Q-learning.
 - `public/app.js`: animación SVG, interacción, gráfica y CSV.
 - `tests/simulation.test.mjs`: conectividad, conservación de vehículos, separación, semáforos y reproducibilidad.
+- `tests/interface.test.mjs`: interacción y exportación con un DOM de prueba; no sustituye la revisión visual en un navegador.
 - `archive/LIDAR_Puente_Rio_Pirro_V4_1.html`: versión anterior preservada como referencia; no se publica dentro de la página.
 - `docs/modelo.md`: parámetros, métricas y límites del experimento.
 - `docs/medicion-piloto.md`: propuesta de contrato para mediciones reales futuras, sin servidor implementado.
@@ -45,6 +46,8 @@ Proyecto Pages `lidar-transito`, cuenta `Jac`, conectado a este repositorio:
 - Node.js: 22.
 
 Los commits enviados a `main` activan el despliegue automático. Las ramas de trabajo pueden generar vistas previas. Revisar el resultado del build antes de considerar publicada una modificación. No subir claves, tokens o mediciones personales al repositorio.
+
+La exportación incluye datos por segundo de ambos motores, comparación de métricas y tablas Q por cruce. La aplicación no transmite resultados a un servidor: cada visitante ejecuta su propio experimento.
 
 Una persona con permisos sobre este repositorio puede clonarlo y enviar cambios desde otra computadora. Para gestionar configuraciones, dominios y despliegues necesita también acceso a la cuenta/proyecto de Cloudflare. La publicación automática usa la integración GitHub de Cloudflare, no credenciales guardadas en el código.
 
