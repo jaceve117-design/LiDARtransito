@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LIDAR V4.1 — Puente sobre el río Pirro</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#182230;background:#f3f6fa}
+*{box-sizing:border-box}body{margin:0}header{background:#102a43;color:white;padding:24px 18px}
+header .wrap,main{max-width:1120px;margin:auto}h1{margin:0 0 8px;font-size:clamp(1.4rem,3vw,2rem)}header p{margin:0;color:#d9e8f5}
+main{padding:20px 16px 40px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.card{background:white;border:1px solid #dce4ed;border-radius:14px;padding:16px;box-shadow:0 2px 8px #102a430a}
+.card h2{font-size:1.08rem;margin:0 0 12px}.field{display:flex;flex-direction:column;gap:5px;margin:10px 0}
+label{font-size:.9rem;font-weight:650}input{width:100%;padding:9px 10px;border:1px solid #b9c7d5;border-radius:8px;font:inherit}
+button{border:0;border-radius:9px;padding:11px 15px;font:inherit;font-weight:700;cursor:pointer}
+.primary{background:#1261a0;color:white}.secondary{background:#e7eef5;color:#16324f}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
+.note{color:#526579;font-size:.9rem;line-height:1.5}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:#f7fafc;border-radius:10px;padding:12px}.stat small{display:block;color:#536579}.stat strong{font-size:1.4rem}
+.signal{display:inline-block;border-radius:999px;padding:5px 10px;font-weight:750;font-size:.85rem}.VERDE{background:#d8f7df;color:#176534}.AMARILLO{background:#fff0c2;color:#7a5200}.ROJO,.TODO_ROJO{background:#fee2e2;color:#9b2020}
+table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;padding:9px;border-bottom:1px solid #e3eaf1}th{background:#f5f8fb}
+.tablewrap{overflow:auto}.downloads{display:flex;gap:9px;flex-wrap:wrap}.downloads button{margin-top:8px}
+canvas{width:100%;height:230px;display:block;background:#fbfdff;border:1px solid #e1e8f0;border-radius:10px}
+footer{margin-top:18px;color:#607286;font-size:.82rem}
+@media(max-width:540px){header{padding:20px 15px}main{padding:14px 10px}.card{padding:13px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Proyecto LIDAR V4.1</h1>
+<p>Simulador de tráfico — Intersección A: Puente sobre el río Pirro, Heredia</p>
+</div></header>
+<main>
+<div class="grid">
+<section class="card">
+<h2>Configuración de la simulación</h2>
+<div class="field"><label for="minutes">Duración (minutos)</label><input id="minutes" type="number" min="1" max="240" value="60"></div>
+<div class="field"><label for="demand">Demanda simulada (vehículos/hora)</label><input id="demand" type="number" min="0" max="5000" value="2000"></div>
+<div class="field"><label for="cycle">Ciclo de referencia (segundos)</label><input id="cycle" type="number" min="30" max="180" value="90"></div>
+<div class="field"><label for="green">Verde inicial (segundos)</label><input id="green" type="number" min="25" max="55" value="35"></div>
+<div class="field"><label for="seed">Semilla aleatoria</label><input id="seed" type="number" value="42"></div>
+<p class="note">La demanda de 2.000 veh/h es un escenario de simulación, no un aforo real. Los resultados son sintéticos y deben validarse con conteos de campo.</p>
+<div class="buttons"><button class="primary" id="run">Ejecutar simulación</button><button class="secondary" id="reset">Restablecer</button></div>
+<div id="status" role="status" class="note">Listo para ejecutar.</div>
+</section>
+<section class="card">
+<h2>Geometría y sensores virtuales</h2>
+<div class="stats">
+<div class="stat"><small>LiDAR A1</small><strong>65 m</strong><small>Antes del semáforo</small></div>
+<div class="stat"><small>LiDAR A2</small><strong>20 m</strong><small>Control cercano</small></div>
+<div class="stat"><small>LiDAR A3</small><strong>35 m</strong><small>Después del semáforo</small></div>
+<div class="stat"><small>Velocidad libre</small><strong>40 km/h</strong><small>11,11 m/s aprox.</small></div>
+</div>
+<p class="note">Modelo simplificado de un tramo de 180 m. El controlador adaptativo usa Q-learning básico y ajusta el verde en pasos de −5, 0 o +5 segundos, limitado a 25–55 s.</p>
+</section>
+</div>
+
+<section class="card" style="margin-top:14px">
+<h2>Estado de la simulación</h2>
+<div class="stats" id="liveStats">
+<div class="stat"><small>Modo mostrado</small><strong>—</strong></div>
+<div class="stat"><small>Fase semafórica</small><strong>—</strong></div>
+<div class="stat"><small>Cola actual</small><strong>—</strong></div>
+<div class="stat"><small>Vehículos que salieron</small><strong>—</strong></div>
+</div>
+<div style="margin-top:14px"><canvas id="chart" width="1000" height="260" aria-label="Gráfico de cola vehicular por segundo"></canvas></div>
+<p class="note">Gráfico: cola vehicular por segundo. Azul = semáforo fijo; naranja = controlador adaptativo.</p>
+</section>
+
+<section class="card" style="margin-top:14px">
+<h2>Comparación: semáforo fijo vs. adaptativo</h2>
+<div class="tablewrap"><table id="comparison"><thead><tr><th>Métrica</th><th>Fijo</th><th>Adaptativo</th><th>Diferencia (%)</th></tr></thead><tbody><tr><td colspan="4">Ejecute la simulación para ver resultados.</td></tr></tbody></table></div>
+<div class="downloads">
+<button class="secondary" id="downloadData" disabled>Descargar datos por segundo CSV</button>
+<button class="secondary" id="downloadCompare" disabled>Descargar comparación CSV</button>
+<button class="secondary" id="downloadQ" disabled>Descargar tabla Q CSV</button>
+</div>
+</section>
+<footer>Versión web basada en el archivo Python proporcionado. La simulación corre localmente en el navegador; no requiere instalar Python ni conexión a internet. Los CSV se descargan desde Chrome.</footer>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const AMARILLO=3, TODO_ROJO=1, LONGITUD=180, SEMAFORO_X=0, LIDAR_A1_X=65, LIDAR_A2_X=20, LIDAR_A3_X=-35, VELOCIDAD_LIBRE=11.11, DIST_SEGURIDAD=7, ACCIONES=[-5,0,5], ESTADOS=["BAJA","MEDIA","ALTA","CRITICA"];
+let result=null;
+function rng(seed){let s=seed>>>0;return ()=>{s=(Math.imul(1664525,s)+1013904223)>>>0;return s/4294967296;};}
+function estadoDemanda(cola){return cola<5?"BAJA":cola<12?"MEDIA":cola<22?"ALTA":"CRITICA";}
+class QLearning{
+ constructor(){this.q={};for(const e of ESTADOS)for(const a of ACCIONES)this.q[`${e},${a}`]=0;this.alpha=.20;this.gamma=.85;this.epsilon=.10;}
+ elegir(estado,random){if(random()<this.epsilon)return ACCIONES[Math.floor(random()*ACCIONES.length)];let vals=ACCIONES.map(a=>this.q[`${estado},${a}`]);let max=Math.max(...vals),cand=ACCIONES.filter((a,i)=>Math.abs(vals[i]-max)<1e-9);return cand[Math.floor(random()*cand.length)];}
+ actualizar(e,a,r,ne){let futuro=Math.max(...ACCIONES.map(x=>this.q[`${ne},${x}`]));let k=`${e},${a}`;this.q[k]+=this.alpha*(r+this.gamma*futuro-this.q[k]);}
+}
+class Semaforo{
+ constructor(verde,ciclo){this.verde=verde;this.ciclo=Math.max(ciclo,verde+AMARILLO+TODO_ROJO+1);this.tiempo_fase=0;this.fase="VERDE";}
+ actualizar(){this.tiempo_fase++;if(this.tiempo_fase>this.ciclo)this.tiempo_fase=1;if(this.tiempo_fase<=this.verde)this.fase="VERDE";else if(this.tiempo_fase<=this.verde+AMARILLO)this.fase="AMARILLO";else if(this.tiempo_fase<=this.verde+AMARILLO+TODO_ROJO)this.fase="TODO_ROJO";else this.fase="ROJO";}
+ nuevoCiclo(ajuste){this.verde=Math.max(25,Math.min(55,this.verde+ajuste));}
+}
+function lidar(vehiculos){let visibles=vehiculos.filter(v=>v.x>=-50&&v.x<=LIDAR_A1_X+5);let cola=vehiculos.filter(v=>v.x<=LIDAR_A1_X&&v.velocidad<.5);let velocidad=visibles.length?visibles.reduce((s,v)=>s+v.velocidad,0)/visibles.length:0;let dist=visibles.length?Math.min(...visibles.map(v=>Math.max(0,v.x-SEMAFORO_X))):LONGITUD;return {vehiculos_detectados:visibles.length,cola:cola.length,velocidad_media:velocidad,distancia_min:dist,lidar_a1:vehiculos.filter(v=>Math.abs(v.x-LIDAR_A1_X)<=2).length,lidar_a2:vehiculos.filter(v=>Math.abs(v.x-LIDAR_A2_X)<=2).length,lidar_a3:vehiculos.filter(v=>Math.abs(v.x-LIDAR_A3_X)<=2).length};}
+function mover(vehiculos,semaforo){let ordenados=[...vehiculos].sort((a,b)=>a.x-b.x);for(let v of ordenados){let candidatos=ordenados.filter(u=>u.x<v.x&&v.x-u.x<30),delante=candidatos.length?candidatos.reduce((a,b)=>a.x>b.x?a:b):null;let objetivo=VELOCIDAD_LIBRE;if(semaforo.fase!=="VERDE"&&v.x>0&&v.x<35)objetivo=0;if(delante&&v.x-delante.x<DIST_SEGURIDAD)objetivo=Math.min(objetivo,Math.max(0,delante.velocidad-1));if(v.x<=0&&semaforo.fase!=="VERDE")objetivo=0;if(v.velocidad<objetivo)v.velocidad=Math.min(objetivo,v.velocidad+1);else v.velocidad=Math.max(objetivo,v.velocidad-1.5);v.x-=v.velocidad;v.detenido=v.velocidad<.5;}}
+function ejecutar({adaptativo,semilla,minutos,demanda,verdeInicial,ciclo}) {
+ const random=rng(semilla), semaforo=new Semaforo(verdeInicial,ciclo), agente=new QLearning();let vehiculos=[],siguienteId=1,acum=0,datos=[],esperaTotal=0,colaAcum=0,salidas=0,ultimoEstado="BAJA",ultimaAccion=0;
+ const segundos=minutos*60;
+ for(let segundo=0;segundo<segundos;segundo++){
+  acum+=demanda/3600;
+  while(acum>=1){if(random()<.85){vehiculos.push({id:siguienteId++,x:LONGITUD+5,velocidad:VELOCIDAD_LIBRE,detenido:false});acum-=1;}else break;}
+  semaforo.actualizar();let lectura=lidar(vehiculos),estado=estadoDemanda(lectura.cola);
+  if(semaforo.tiempo_fase===1 && adaptativo){let accion=agente.elegir(estado,random);semaforo.nuevoCiclo(accion);let recompensa=-(lectura.cola*2+Math.max(0,10-lectura.velocidad_media));agente.actualizar(ultimoEstado,ultimaAccion,recompensa,estado);ultimoEstado=estado;ultimaAccion=accion;}
+  mover(vehiculos,semaforo);let salieron=vehiculos.filter(v=>v.x<LIDAR_A3_X);vehiculos=vehiculos.filter(v=>v.x>=LIDAR_A3_X);salidas+=salieron.length;lectura=lidar(vehiculos);let cola=lectura.cola,espera=vehiculos.filter(v=>v.detenido).length;esperaTotal+=espera;colaAcum+=cola;
+  datos.push({segundo:segundo+1,modo:adaptativo?"ADAPTATIVO":"FIJO",fase:semaforo.fase,verde_s:semaforo.verde,vehiculos_en_tramo:vehiculos.length,vehiculos_salida:salidas,cola,velocidad_media_mps:+lectura.velocidad_media.toFixed(3),distancia_min_m:+lectura.distancia_min.toFixed(2),lidar_A1_65m:lectura.lidar_a1,lidar_A2_20m:lectura.lidar_a2,lidar_A3_salida:lectura.lidar_a3});
+ }
+ let resumen={modo:adaptativo?"ADAPTATIVO":"FIJO",vehiculos_salida:salidas,cola_promedio:colaAcum/datos.length,espera_promedio_vehiculos:esperaTotal/datos.length,velocidad_media_mps:datos.reduce((s,d)=>s+d.velocidad_media_mps,0)/datos.length,verde_promedio_s:datos.reduce((s,d)=>s+d.verde_s,0)/datos.length};
+ return {datos,resumen,agente};
+}
+function csv(rows){if(!rows.length)return "";let keys=Object.keys(rows[0]);return "\ufeff"+[keys.join(","),...rows.map(r=>keys.map(k=>{let v=String(r[k]??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(","))].join("\r\n");}
+function download(name,content){let blob=new Blob([content],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
+function draw(fijo,ai){let c=$("chart"),ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);let max=Math.max(1,...fijo.map(d=>d.cola),...ai.map(d=>d.cola));ctx.strokeStyle="#dce5ee";ctx.fillStyle="#5a6b7c";ctx.font="12px system-ui";for(let i=0;i<=4;i++){let y=10+(h-35)*i/4;ctx.beginPath();ctx.moveTo(42,y);ctx.lineTo(w-10,y);ctx.stroke();ctx.fillText(Math.round(max*(4-i)/4),8,y+4);}function line(data,color){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();data.forEach((d,i)=>{let x=42+(w-55)*i/Math.max(1,data.length-1),y=10+(h-35)*(1-d.cola/max);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();}line(fijo,"#1769aa");line(ai,"#e57a22");}
+function showLive(data,resumen){let d=data[data.length-1];$("liveStats").innerHTML=`<div class="stat"><small>Modo mostrado</small><strong>${d.modo}</strong></div><div class="stat"><small>Fase semafórica</small><strong><span class="signal ${d.fase}">${d.fase.replace("_"," ")}</span></strong></div><div class="stat"><small>Cola final</small><strong>${d.cola}</strong></div><div class="stat"><small>Vehículos que salieron</small><strong>${d.vehiculos_salida}</strong></div>`;}
+function run(){let minutos=+$("minutes").value,demanda=+$("demand").value,ciclo=+$("cycle").value,verdeInicial=+$("green").value,semilla=+$("seed").value;if(!Number.isFinite(minutos)||minutos<1||minutos>240||demanda<0||demanda>5000||ciclo<30||ciclo>180||verdeInicial<25||verdeInicial>55){$("status").textContent="Revise los valores: duración 1–240 min, demanda 0–5000, ciclo 30–180 s y verde 25–55 s.";return;}
+ $("status").textContent="Ejecutando ambos escenarios…";setTimeout(()=>{try{let fijo=ejecutar({adaptativo:false,semilla,minutos,demanda,verdeInicial,ciclo}),ai=ejecutar({adaptativo:true,semilla,minutos,demanda,verdeInicial,ciclo});let keys=Object.keys(fijo.resumen).filter(k=>k!=="modo"),comparacion=keys.map(k=>{let f=fijo.resumen[k],a=ai.resumen[k],mejora=f!==0?(f-a)/f*100:0;return {metrica:k,fijo:+f.toFixed(3),adaptativo:+a.toFixed(3),mejora_porcentaje:+mejora.toFixed(2)};});result={fijo,ai,comparacion};$("comparison").querySelector("tbody").innerHTML=comparacion.map(r=>`<tr><td>${r.metrica}</td><td>${r.fijo}</td><td>${r.adaptativo}</td><td>${r.mejora_porcentaje}%</td></tr>`).join("");draw(fijo.datos,ai.datos);showLive(ai.datos,ai.resumen);$("status").textContent=`Simulación completada: ${minutos} minuto(s), ${minutos*60} registros por escenario.`;for(let id of ["downloadData","downloadCompare","downloadQ"])$(id).disabled=false;}catch(e){$("status").textContent="Error al ejecutar: "+e.message;console.error(e);}},30);}
+$("run").addEventListener("click",run);
+$("reset").addEventListener("click",()=>{ $("minutes").value=60;$("demand").value=2000;$("cycle").value=90;$("green").value=35;$("seed").value=42;result=null;$("status").textContent="Configuración restablecida. Listo para ejecutar.";$("comparison").querySelector("tbody").innerHTML='<tr><td colspan="4">Ejecute la simulación para ver resultados.</td></tr>';$("liveStats").innerHTML='<div class="stat"><small>Modo mostrado</small><strong>—</strong></div><div class="stat"><small>Fase semafórica</small><strong>—</strong></div><div class="stat"><small>Cola actual</small><strong>—</strong></div><div class="stat"><small>Vehículos que salieron</small><strong>—</strong></div>';$("chart").getContext("2d").clearRect(0,0,$("chart").width,$("chart").height);for(let id of ["downloadData","downloadCompare","downloadQ"])$(id).disabled=true;});
+$("downloadData").addEventListener("click",()=>{if(result)download("v4_datos_segundo_a_segundo.csv",csv(result.ai.datos));});
+$("downloadCompare").addEventListener("click",()=>{if(result)download("v4_comparacion.csv",csv(result.comparacion));});
+$("downloadQ").addEventListener("click",()=>{if(result){let rows=[];for(let e of ESTADOS)for(let a of ACCIONES)rows.push({estado:e,accion:a,Q:+result.ai.agente.q[`${e},${a}`].toFixed(6)});download("v4_qtable.csv",csv(rows));}});
+</script>
+</body>
+</html>
