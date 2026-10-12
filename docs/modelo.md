@@ -1,6 +1,6 @@
 # Modelo experimental 0.2
 
-La geometría y las restricciones de la red cambiaron en 0.2: consultar [mapa-real.md](mapa-real.md). La instantánea municipal sustituye la malla inicial; la referencia marcada determina los nueve controles.
+La geometría y las restricciones de la red cambiaron en 0.2: consultar [mapa-real.md](mapa-real.md). La instantánea municipal sustituye la malla inicial; la referencia inicial y las correcciones del usuario determinan diez semáforos. Ver [prioridades-pirro.md](prioridades-pirro.md) para los cinco cedas y el cruce ferroviario de prueba.
 
 ## Referencias y alcance
 

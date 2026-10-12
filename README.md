@@ -72,3 +72,5 @@ El trazado se obtiene de una instantánea municipal y se alinea a Heredia.png. L
 Ouster es una referencia de hardware a evaluar, no una integración o patrocinio: https://ouster.com/industry/smart-infrastructure. El simulador no depende de una marca.
 
 Escenarios de Pirro, horarios, factor ×1,2 y supuestos de bloqueo: [docs/pirro-2026.md](docs/pirro-2026.md). La nueva imagen de flechas se usa únicamente para transcribir sentidos en `data/direction-reference.json`; el mapa público conserva la imagen limpia.
+
+Cedas, giros de buses, semáforo oeste y tren (v0.4.0): [docs/prioridades-pirro.md](docs/prioridades-pirro.md).

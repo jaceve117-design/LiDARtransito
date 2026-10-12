@@ -5,7 +5,7 @@ import { createPair,createArrivals,Simulation,Signal,csv } from '../public/simul
 const options={duration:300,demand:2000,seed:42,cycle:90,green:35,distribute:true};
 test('Every boundary can reach every other boundary without exiting the network early',()=>{
   const n=createNetwork();for(const origin of n.boundaries.filter(n=>n.canEnter))for(const dest of n.boundaries.filter(n=>n.canExit))if(origin.id!==dest.id){const path=shortestPath(n,origin.id,dest.id);assert.ok(path.length,`${origin.id} -> ${dest.id}`);assert.equal(n.edgeById.get(path.at(-1)).to,dest.id);}
-  assert.ok(n.nodes.length>300);assert.equal(n.nodes.filter(n=>n.signal).length,9);
+  assert.ok(n.nodes.length>300);assert.equal(n.nodes.filter(n=>n.signal).length,10);
 });
 test('Seed reproduces demand, shared independently of controller decisions',()=>{
   const n=createNetwork();assert.deepEqual(createArrivals(n,options),createArrivals(n,options));const p=createPair(options);assert.strictEqual(p.fixed.arrivals,p.adaptive.arrivals);
@@ -35,7 +35,7 @@ test('Signals have clearance phases and bounded adaptive greens',()=>{
 test('Identical fixed scenario reproduces its full results',()=>{const a=new Simulation(options),b=new Simulation(options);for(let i=0;i<1500;i++){a.step();b.step();}assert.deepEqual(a.snapshot(),b.snapshot());assert.deepEqual(a.records,b.records);});
 test('CSV escapes commas, quotes, and includes a UTF-8 BOM',()=>{const out=csv([{label:'a,"b',value:2}]);assert.ok(out.startsWith('\ufeff'));assert.ok(out.includes('"a,""b"'));});
 
-test('Nine controls match the supplied red marks, and every reference corridor has directed road segments',()=>{
+test('Ten controls match the user references, and every reference corridor has directed road segments',()=>{
  const n=createNetwork(),signals=n.nodes.filter(n=>n.signal);for(const s of signals){assert.equal(s.signalSource,'USER');assert.ok(Math.hypot(s.x-s.annotation[0],s.y-s.annotation[1])<7,s.id);}for(const g of MAP.guides){assert.ok(n.edges.some(e=>e.guide===g.id),g.id);for(const e of n.edges.filter(e=>e.guide===g.id))assert.equal(e.directionSource,'USER');}
 });
 test('Vehicle positions follow polyline bends and finish at the real street endpoint',()=>{const n=createNetwork(),edge=n.edges.find(e=>e.points.length>5);assert.ok(edge);const first=pointOnEdge(edge,0),last=pointOnEdge(edge,edge.length);assert.ok(Math.hypot(first.x-edge.points[0][0],first.y-edge.points[0][1])<.1);assert.ok(Math.hypot(last.x-edge.points.at(-1)[0],last.y-edge.points.at(-1)[1])<.1);assert.ok(Number.isFinite(pointOnEdge(edge,edge.length/2).angle));});

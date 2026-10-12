@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "source": "Siete observaciones del usuario, 12 de octubre de 2026. Ubicaciones alineadas con el mapa base; prioridades y giros de campo, tiempos de prueba.",
+  "gapSeconds": 4,
+  "junctions": [
+    {
+      "id": "laly-sanpablo",
+      "comment": 1,
+      "node": "mh-31",
+      "label": "La Casona · giro hacia San Pablo y tren",
+      "x": 1028.29,
+      "y": 757.64,
+      "yields": [
+        {
+          "incoming": "road-26-r",
+          "outgoing": "road-1-r",
+          "priority": [
+            "road-23-f"
+          ],
+          "label": "Giro izquierdo hacia San Pablo: ceda al ingreso desde Miraflores"
+        }
+      ],
+      "rail": true
+    },
+    {
+      "id": "pirro-signal",
+      "comment": 2,
+      "node": "pirro",
+      "label": "Pirro · semáforo y ceda desde el este",
+      "yields": [
+        {
+          "incoming": "road-37-r",
+          "outgoing": "road-36-f",
+          "priority": [
+            "road-34-f",
+            "road-38-r"
+          ],
+          "signalBypass": true,
+          "label": "Este → norte: giro derecho con ceda, sin fase propia"
+        }
+      ]
+    },
+    {
+      "id": "pirro-merge",
+      "comment": 3,
+      "node": "mh-42",
+      "label": "Ingreso desde el oeste · ceda al flujo norte",
+      "yields": [
+        {
+          "incoming": "road-33-r",
+          "outgoing": "road-32-f",
+          "priority": [
+            "road-30-f"
+          ],
+          "label": "Oeste → norte: ceda al flujo sur → norte"
+        }
+      ]
+    },
+    {
+      "id": "pirro-center-turn",
+      "comment": 4,
+      "node": "mh-43",
+      "label": "Pirro · seguir al norte o girar al centro",
+      "preferred": [
+        {
+          "incoming": "road-32-f",
+          "outgoing": [
+            "road-34-f",
+            "road-35-f"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bus-san-jose",
+      "comment": 5,
+      "node": "mh-702",
+      "label": "Buses hacia San José · giro derecho con ceda",
+      "yields": [
+        {
+          "incoming": "road-435-r",
+          "outgoing": "road-26-r",
+          "priority": [
+            "road-434-r"
+          ],
+          "label": "Oeste → sur: ceda al flujo norte → sur"
+        }
+      ],
+      "busTurns": [
+        {
+          "incoming": "road-435-r",
+          "outgoing": [
+            "road-26-r"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "west-signal",
+      "comment": 6,
+      "node": "mh-726",
+      "label": "Pirro oeste · semáforo hacia San José",
+      "signal": true,
+      "x": 956.16,
+      "y": 569
+    },
+    {
+      "id": "west-yield",
+      "comment": 7,
+      "node": "mh-795",
+      "label": "Cruce oeste · ceda en dirección este",
+      "yields": [
+        {
+          "incoming": "road-498-r",
+          "priority": [
+            "road-499-r"
+          ],
+          "label": "Oeste → este: ceda al flujo norte → sur"
+        }
+      ]
+    }
+  ]
+}

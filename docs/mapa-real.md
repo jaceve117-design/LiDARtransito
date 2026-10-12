@@ -1,4 +1,4 @@
-# Mapa de referencia y red vial 0.3
+# Mapa de referencia y red vial 0.4
 
 ## Fuentes
 
@@ -24,7 +24,7 @@ node scripts/prepare-network.mjs
 
 ## Sentidos, puntos rojos y flujos
 
-- Los nueve controles son los puntos aportados por el usuario; no se añaden semáforos por cada fila del mapa.
+- Se conservan los nueve controles de la referencia inicial y se añade el semáforo del costado oeste confirmado por el usuario el 12 de octubre (diez en total). Los cinco cedas se aplican por movimiento, según `data/pirro-movements.json`; no se convierten en semáforos.
 - La nueva imagen de Google Maps anotada por el usuario se transcribió a 31 corredores en `data/direction-reference.json`. Incluye las flechas rojas y flechas pequeñas legibles del mapa. Se alinea con la geometría municipal mediante `data/direction-reference-registration.json` (distancia media aproximada a píxeles viales: 1,0 px). El emparejamiento comprueba proximidad, orientación y cobertura de la polilínea, no solo el extremo de una flecha.
 - El ramal junto a la Hispanoamericana circula al sur hacia La Casona de Laly; el ramal paralelo circula al norte hacia Pirro. La aproximación superior desde San Pablo circula hacia Pirro; la salida inferior de Ruta 5 se orienta al este según la imagen. El tramo La Casona–Miraflores conserva un carril por sentido. Las flechas opuestas crean dos carriles independientes, uno por sentido, no dos carriles en la misma dirección.
 - Los sentidos sin marca **siguen sin verificarse**. El experimento permite ambos sentidos en ellos; no afirma que sean bidireccionales en campo. Deben introducirse las restricciones y giros reales antes de calibrar resultados.
@@ -44,3 +44,5 @@ Prompt de edición utilizado:
 La edición puede simplificar detalles gráficos o rótulos; la referencia original y el snapshot municipal quedan disponibles para revisar y corregir cualquier diferencia. No se modificó `Heredia.png`.
 
 Ver `docs/pirro-2026.md` para los escenarios de hora pico, el factor de demanda y el bloqueo de cruces. La nueva imagen de direcciones no se distribuye ni se utiliza como mapa base.
+
+En v0.4.0 se incorporan las siete observaciones detalladas de prioridad, el décimo semáforo y el tren: [prioridades-pirro.md](prioridades-pirro.md). Las referencias históricas de nueve controles describen las versiones anteriores.

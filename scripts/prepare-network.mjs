@@ -3,6 +3,7 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 const source=JSON.parse(await readFile('data/municipal-roads.json','utf8'));
 const fit=JSON.parse(await readFile('data/map-registration.json','utf8'));
+const movementReference=JSON.parse(await readFile('data/pirro-movements.json','utf8'));
 const width=2048,height=1033,metersPerUnit=Math.cos(10*Math.PI/180)/fit.scale;
 const project=([x,y])=>[fit.tx+fit.scale*(x-fit.ref[0]),fit.ty-fit.scale*(y-fit.ref[1])];
 const marks=[
@@ -16,6 +17,7 @@ const marks=[
  {id:'pirro',name:'Pirro · acceso al centro',x:995,y:501},
  {id:'pirro-sur',name:'Pirro · ingreso desde San Pablo',x:1008,y:617.32},
 ];
+for(const j of movementReference.junctions.filter(j=>j.signal))marks.push({id:j.node,name:j.label,x:j.x,y:j.y});
 const directionReference=JSON.parse(await readFile('data/direction-reference.json','utf8'));
 const directionFit=directionReference.registration;
 const guides=directionReference.guides.map(g=>({...g,points:g.points.map(([x,y])=>[(x-directionFit.tx)/directionFit.scale,(y-directionFit.ty)/directionFit.scale]),tolerance:g.tolerance/directionFit.scale}));
@@ -61,7 +63,7 @@ function matchDirection(points,sourceIds){
 const edges=[];for(let i=0;i<roads.length;i++){const r=roads[i],length=r.points.slice(1).reduce((sum,p,j)=>sum+Math.hypot(p[0]-r.points[j][0],p[1]-r.points[j][1])*metersPerUnit,0);if(length<.1)continue;const direction=matchDirection(r.points,r.sourceIds);for(const forward of direction?[...(direction.lanes.forward?[direction.forward]:[]),...(direction.lanes.reverse?[!direction.forward]:[])]:[true,false]){const points=(forward?r.points:[...r.points].reverse()).map(p=>p.map(v=>+v.toFixed(2))),a=forward?r.a:r.b,b=forward?r.b:r.a,dx=points.at(-1)[0]-points[0][0],dy=points.at(-1)[1]-points[0][1];edges.push({id:`road-${i}-${forward?'f':'r'}`,roadId:`road-${i}`,from:idFor(a),to:idFor(b),length:+length.toFixed(3),points,axis:Math.abs(dx)>Math.abs(dy)?'H':'V',name:r.name,directionSource:direction?'USER':'UNCONFIRMED',guide:direction?.guide??null,sourceIds:r.sourceIds,laneCount:1,roadLaneCount:direction?direction.lanes.forward+direction.lanes.reverse:2});}}
 for(const n of nodes){n.canEnter=edges.some(e=>e.from===n.id);n.canExit=edges.some(e=>e.to===n.id);}
 const directed=new Map(nodes.map(n=>[n.id,[]]));for(const e of edges)directed.get(e.from).push(e.to);const bounds=new Set(nodes.filter(n=>n.boundary).map(n=>n.id));for(const n of nodes.filter(n=>n.boundary&&n.canEnter)){const seen=new Set([n.id]),queue=[n.id];while(queue.length){const id=queue.pop();for(const to of directed.get(id)){if(seen.has(to))continue;seen.add(to);if(!bounds.has(to))queue.push(to);}}n.destinations=nodes.filter(b=>b.boundary&&b.canExit&&b.side!==n.side&&seen.has(b.id)).map(b=>b.id);if(!n.destinations.length)throw Error('No destinations for '+n.id);}
-const graph={version:'0.3',width,height,metersPerUnit:+metersPerUnit.toFixed(6),registration:fit,sourceUrl:'https://sig.heredia.go.cr/server/rest/services/UTGV/RedVIalTramosMH/MapServer',signalSource:'Heredia.png · referencia marcada por el usuario',directionSource:directionReference.source,focusZone:{label:"Corredor Pirro · prioridad",bounds:[636,399,813,1077].map((v,i)=>(v-(i%2?directionFit.ty:directionFit.tx))/directionFit.scale)},guides,nodes,edges};
+const graph={version:'0.4',width,height,metersPerUnit:+metersPerUnit.toFixed(6),registration:fit,sourceUrl:'https://sig.heredia.go.cr/server/rest/services/UTGV/RedVIalTramosMH/MapServer',signalSource:'Heredia.png · referencia marcada por el usuario',directionSource:directionReference.source,movementRules:movementReference,focusZone:{label:"Corredor Pirro · prioridad",bounds:[636,399,813,1077].map((v,i)=>(v-(i%2?directionFit.ty:directionFit.tx))/directionFit.scale)},guides,nodes,edges};
 await mkdir('public/maps',{recursive:true});await writeFile('public/network-data.js','// Municipal road geometry, registered to the supplied image. See docs/mapa-real.md.\nexport const MAP = '+JSON.stringify(graph)+';\n');
 const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1033" viewBox="0 0 2048 1033"><rect width="2048" height="1033" fill="#f4f5f3"/>${roads.map(r=>`<polyline points="${r.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#aab6bd" stroke-width="2"/>`).join('')}${marks.map(m=>`<circle cx="${m.x}" cy="${m.y}" r="6" fill="red"/>`).join('')}${nodes.filter(n=>n.signal).map(n=>`<circle cx="${n.x}" cy="${n.y}" r="9" fill="none" stroke="#198966" stroke-width="2"/>`).join('')}</svg>`;
 await writeFile('data/registration-check.svg',svg);

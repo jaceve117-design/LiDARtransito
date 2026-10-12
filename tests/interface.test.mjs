@@ -14,7 +14,7 @@ test('Page renders, runs, switches controller, selects junctions, resets and exp
   for(const select of document.querySelectorAll('select'))Object.defineProperty(select,'value',{writable:true,value:select.querySelector('option[selected]')?.getAttribute('value')??select.querySelector('option').getAttribute('value')});
   const originalCreate=URL.createObjectURL,originalRevoke=URL.revokeObjectURL;URL.createObjectURL=blob=>{blobs.push(blob);return 'blob:test';};URL.revokeObjectURL=()=>{};
   try {
-    await import('../public/app.js');assert.equal(byId('signals').children.length,9);assert.equal(byId('comparison').children.length,7);assert.equal(byId('junctionName').textContent,'Pirro · acceso al centro');
+    await import('../public/app.js');assert.equal(byId('signals').children.length,10);assert.equal(byId('comparison').children.length,7);assert.equal(byId('junctionName').textContent,'Pirro · semáforo y ceda desde el este');
     assert.equal(byId('mapBase').getAttribute('href'),'/maps/heredia-limpia.png');assert.equal(document.querySelectorAll('#roads,#trafficGuides,[marker-end]').length,0);assert.equal(byId('effectiveDemand').textContent.replace(/\D/g,''),'2400');byId('focusPirro').click();
     byId('play').click();assert.equal(byId('play').textContent,'Pausar');let now=performance.now();for(let i=0;i<110;i++){now+=100;frames.shift()(now);}assert.ok(+byId('metricActive').textContent>0);assert.ok(byId('vehicles').children.length>0);assert.equal(byId('export').disabled,false);
     byId('play').click();assert.equal(byId('play').textContent,'Iniciar');
