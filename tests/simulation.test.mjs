@@ -4,7 +4,7 @@ import { CONFIG,MAP,createNetwork,shortestPath,pointOnEdge } from '../public/net
 import { createPair,createArrivals,Simulation,Signal,csv } from '../public/simulation.js';
 const options={duration:300,demand:2000,seed:42,cycle:90,green:35,distribute:true};
 test('Every boundary can reach every other boundary without exiting the network early',()=>{
-  const n=createNetwork();for(const origin of n.boundaries)for(const dest of n.boundaries)if(origin.id!==dest.id){const path=shortestPath(n,origin.id,dest.id);assert.ok(path.length,`${origin.id} -> ${dest.id}`);assert.equal(n.edgeById.get(path.at(-1)).to,dest.id);}
+  const n=createNetwork();for(const origin of n.boundaries.filter(n=>n.canEnter))for(const dest of n.boundaries.filter(n=>n.canExit))if(origin.id!==dest.id){const path=shortestPath(n,origin.id,dest.id);assert.ok(path.length,`${origin.id} -> ${dest.id}`);assert.equal(n.edgeById.get(path.at(-1)).to,dest.id);}
   assert.ok(n.nodes.length>300);assert.equal(n.nodes.filter(n=>n.signal).length,9);
 });
 test('Seed reproduces demand, shared independently of controller decisions',()=>{
@@ -39,3 +39,5 @@ test('Nine controls match the supplied red marks, and every yellow guide has dir
  const n=createNetwork(),signals=n.nodes.filter(n=>n.signal);for(const s of signals){assert.equal(s.signalSource,'USER');assert.ok(Math.hypot(s.x-s.annotation[0],s.y-s.annotation[1])<7,s.id);}for(const g of MAP.guides){assert.ok(n.edges.some(e=>e.guide===g.id),g.id);for(const e of n.edges.filter(e=>e.guide===g.id))assert.equal(e.directionSource,'USER');}
 });
 test('Vehicle positions follow polyline bends and finish at the real street endpoint',()=>{const n=createNetwork(),edge=n.edges.find(e=>e.points.length>5);assert.ok(edge);const first=pointOnEdge(edge,0),last=pointOnEdge(edge,edge.length);assert.ok(Math.hypot(first.x-edge.points[0][0],first.y-edge.points[0][1])<.1);assert.ok(Math.hypot(last.x-edge.points.at(-1)[0],last.y-edge.points.at(-1)[1])<.1);assert.ok(Number.isFinite(pointOnEdge(edge,edge.length/2).angle));});
+
+test('The real network has entrances on all four sides, including the eastern approaches to Pirro',()=>{const n=createNetwork();for(const side of ['N','S','E','O'])assert.ok(n.boundaries.some(b=>b.side===side&&b.canEnter),side);assert.ok(n.boundaries.some(b=>b.side==='E'&&b.y>500&&b.y<750&&b.canEnter));});

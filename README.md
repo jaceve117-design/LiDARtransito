@@ -63,7 +63,7 @@ npm run deploy
 
 ## Qué representa esta versión
 
-975 tramos de la red municipal, 9 puntos de control marcados por el usuario y 30 accesos en los bordes. La red admite rutas alternativas y bloqueo por ocupación del siguiente tramo. Dos motores reciben la misma lista de llegadas y destinos, con semilla reproducible. El selector cambia qué motor se dibuja; ambos avanzan al mismo tiempo.
+975 tramos de la red municipal, 9 puntos de control marcados por el usuario y 34 accesos en los bordes. La red admite rutas alternativas y bloqueo por ocupación del siguiente tramo. Dos motores reciben la misma lista de llegadas y destinos, con semilla reproducible. El selector cambia qué motor se dibuja; ambos avanzan al mismo tiempo.
 
 **No es un gemelo digital calibrado.** La imagen aportada sirve de referencia visual. El estudio de impacto del proyecto Bulevar, de mayo de 2023, sirve únicamente como referencia histórica: no se aplica la propuesta de bulevar, ni sus escenarios se presentan como la red actual. No se importaron sus aforos como demanda activa.
 

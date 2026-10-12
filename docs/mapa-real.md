@@ -12,7 +12,7 @@ La geometría municipal se alineó con las calles de la imagen original usando u
 
 Los nueve puntos de control se asociaron a cruces próximos de la geometría municipal. La diferencia visual entre marca y cruce fue de 0,9 a 6,1 píxeles en un lienzo de 2.048 × 1.033. La marca del acceso sur al Pirro estaba unos 6 píxeles al norte del cruce de la capa municipal. Se conserva la imagen original para comparar.
 
-La red reconstruida contiene 975 tramos, 671 nodos topológicos y 30 accesos en los bordes. Los nodos incluyen cruces y extremos de vías; **671 no significa 671 intersecciones semaforizadas**. Las líneas siguen las polilíneas municipales, con sus curvas y conexiones. Solo se simula el componente conectado; los fragmentos desconectados no reciben viajes. Las calles visibles en el mapa base fuera del área cubierta por esa red no tienen tráfico simulado inventado.
+La red reconstruida contiene 975 tramos, 671 nodos topológicos y 34 accesos en los bordes. Los nodos incluyen cruces y extremos de vías; **671 no significa 671 intersecciones semaforizadas**. Las líneas siguen las polilíneas municipales, con sus curvas y conexiones. Los accesos también incluyen extremos de rutas nacionales dentro de la imagen, donde termina la cobertura municipal, para representar las aproximaciones del este. No se usan todos los callejones internos como generadores de demanda. Solo se simula el componente conectado; los fragmentos desconectados no reciben viajes. Las calles visibles en el mapa base fuera del área cubierta por esa red no tienen tráfico simulado inventado.
 
 Se guardó el snapshot con los campos públicos necesarios en `data/municipal-roads.json`. Se puede regenerar el grafo sin conexión con:
 
