@@ -35,7 +35,7 @@ node scripts/prepare-network.mjs
 
 ## Imágenes
 
-`public/maps/heredia-referencia.png` conserva la imagen marcada original. `public/maps/heredia-limpia.png` es una edición con la herramienta integrada de imágenes: reduce rótulos comerciales e iconos y quita las marcas pintadas del fondo, manteniendo el encuadre y el trazado. Las flechas y los controles se reconstruyen como elementos interactivos. La geometría de circulación procede del grafo, no de interpretar la imagen generada. El usuario puede activar “Imagen original” para comprobar la correspondencia.
+`public/maps/heredia-referencia.png` conserva la imagen marcada original. `public/maps/heredia-limpia.png` es una edición con la herramienta integrada de imágenes: reduce rótulos comerciales e iconos y quita las marcas pintadas del fondo, manteniendo el encuadre y el trazado. Solo se dibujan los vehículos y los controles interactivos sobre el mapa limpio. Las flechas de referencia se utilizan para los sentidos de circulación, sin mostrarlas; tampoco se superponen líneas de la red municipal. Las capas de colas y sensores son opcionales y empiezan desactivadas. La geometría de circulación procede del grafo, no de interpretar la imagen generada. El usuario puede activar “Imagen original” para comprobar la correspondencia.
 
 Prompt de edición utilizado:
 

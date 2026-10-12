@@ -4,15 +4,11 @@ const $=id=>document.getElementById(id),format=new Intl.NumberFormat('es-CR',{ma
 const ui={running:false,calculating:false,mode:'adaptive',selected:'pirro',zoom:1.65,panX:350,panY:-100,elapsed:0,lastRender:0,lastStats:0,frame:0};
 let options={duration:900,demand:2000,seed:42,cycle:90,green:35,distribute:true},pair=createPair(options);
 const net=pair.fixed.network;
-const escape=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
 function point(edge,p,offset=1.5){return pointOnEdge(edge,p,offset);}
 function drawBase(){
   $('map').setAttribute('viewBox',`0 0 ${MAP.width} ${MAP.height}`);
-  $('mapViewport').innerHTML=`<image id="mapBase" href="/maps/heredia-limpia.png" width="${MAP.width}" height="${MAP.height}" preserveAspectRatio="none"/><g id="roads"></g><g id="trafficGuides"></g><g id="heat"></g><g id="sensors"></g><g id="vehicles"></g><g id="signals"></g><g id="nodeLabels"></g>`;
+  $('mapViewport').innerHTML=`<image id="mapBase" href="/maps/heredia-limpia.png" width="${MAP.width}" height="${MAP.height}" preserveAspectRatio="none"/><g id="heat"></g><g id="sensors"></g><g id="vehicles"></g><g id="signals"></g>`;
   const unique=new Map(net.edges.map(e=>[e.roadId,e]));
-  $('roads').innerHTML=[...unique.values()].map(e=>`<polyline points="${e.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#526f7e" stroke-opacity=".18" stroke-width="1.2" stroke-linecap="butt" stroke-linejoin="miter"/>`).join('');
-  $('trafficGuides').innerHTML=MAP.guides.map(g=>`<polyline points="${g.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#e5ad36" stroke-width="3" marker-end="url(#flowArrow)"/><title>${escape(g.label)}</title>`).join('');
-  $('nodeLabels').innerHTML='';
   for(const n of net.nodes.filter(n=>n.signal)){
     const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.dataset.node=n.id;g.setAttribute('tabindex','0');g.setAttribute('role','button');g.setAttribute('aria-label',`Seleccionar ${n.name}`);g.classList.add('node-hit');
     const select=()=>{ui.selected=n.id;render();renderStats();};g.addEventListener('click',()=>{if(!drag?.moved)select();});g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}});$('signals').appendChild(g);
