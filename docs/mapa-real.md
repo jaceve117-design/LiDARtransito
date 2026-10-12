@@ -6,6 +6,8 @@
 - Red Vial Tramos MH, Municipalidad de Heredia: https://sig.heredia.go.cr/server/rest/services/UTGV/RedVIalTramosMH/MapServer/0. Se descargó una instantánea pública de geometrías en Web Mercator, con campos de nombre, longitud, tipo de vía y dirección. El campo `SENTIDO_CARRIL` estaba vacío en los 1.044 registros consultados. Esta capa no se interpretó como un inventario de semáforos.
 - Se revisaron servicios públicos de UTGV, Ingeniería y Policía Municipal, y resultados públicos del MOPT. No se obtuvo un inventario completo, actualizado y verificable de semáforos y ciclos para el área. Las solicitudes de contraste a OpenStreetMap no devolvieron datos utilizables; no se incorporaron datos de esa fuente.
 
+El anexo A del estudio de mayo de 2023 contiene la certificación DVT-DGIT-2023-142 del Departamento de Semáforos, fechada el 31 de marzo de 2023 (páginas PDF 233–236, impresas 227–230). Incluye planes de Av. 7 y Calle 9; Av. 1 y Calle 9; Av. 6 y Calle 9; Av. 20 y Ruta 3, La Fosforera; y Av. 14 entre calles 10 y 12. Se conserva como referencia histórica, sin declarar vigentes esos planes ni añadir semáforos actuales por inferencia.
+
 ## Alineación y topología
 
 La geometría municipal se alineó con las calles de la imagen original usando una transformación de escala y desplazamiento, guardada en `data/map-registration.json`. No se reorganizó la ciudad como una malla regular. La transformación se estimó sobre píxeles de vialidad de la referencia; es una alineación visual para este experimento, no una certificación topográfica.
