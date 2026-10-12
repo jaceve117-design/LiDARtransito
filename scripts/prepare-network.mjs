@@ -14,7 +14,7 @@ const marks=[
  {id:'av4-c8',name:'Avenida 4 · cruce 3',x:742,y:514},
  {id:'av4-c6',name:'Avenida 4 · cruce 4',x:779,y:518},
  {id:'pirro',name:'Pirro · acceso al centro',x:995,y:501},
- {id:'pirro-sur',name:'Pirro · confluencia sur / Ruta 5',x:1018,y:676},
+ {id:'pirro-sur',name:'Pirro · ingreso desde San Pablo',x:1008,y:617.32},
 ];
 const directionReference=JSON.parse(await readFile('data/direction-reference.json','utf8'));
 const directionFit=directionReference.registration;

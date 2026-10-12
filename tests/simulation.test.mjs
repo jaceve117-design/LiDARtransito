@@ -40,6 +40,13 @@ test('Nine controls match the supplied red marks, and every reference corridor h
 });
 test('Vehicle positions follow polyline bends and finish at the real street endpoint',()=>{const n=createNetwork(),edge=n.edges.find(e=>e.points.length>5);assert.ok(edge);const first=pointOnEdge(edge,0),last=pointOnEdge(edge,edge.length);assert.ok(Math.hypot(first.x-edge.points[0][0],first.y-edge.points[0][1])<.1);assert.ok(Math.hypot(last.x-edge.points.at(-1)[0],last.y-edge.points.at(-1)[1])<.1);assert.ok(Number.isFinite(pointOnEdge(edge,edge.length/2).angle));});
 
+test('The corrected Pirro signal controls the northern San Pablo junction and frees the old crossing',()=>{
+  const n=createNetwork(),control=n.byId.get('pirro-sur');
+  assert.ok(Math.hypot(control.x-1008,control.y-617.32)<.1);
+  assert.ok(n.incoming.get(control.id).some(e=>e.guide==='sanpablo-pirro'));
+  assert.ok(n.nodes.some(v=>Math.hypot(v.x-1017.58,v.y-682.05)<.1&&!v.signal));
+});
+
 test('The real network has entrances on all four sides, including the eastern approaches to Pirro',()=>{const n=createNetwork();for(const side of ['N','S','E','O'])assert.ok(n.boundaries.some(b=>b.side===side&&b.canEnter),side);assert.ok(n.boundaries.some(b=>b.side==='E'&&b.y>500&&b.y<750&&b.canEnter));});
 
 test('Reference corridors enforce one-way travel and separate opposing lanes',()=>{
