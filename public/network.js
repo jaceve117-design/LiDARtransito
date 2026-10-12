@@ -1,7 +1,7 @@
 import { MAP } from './network-data.js';
 export { MAP };
 export const CONFIG={label:'Casco central de Heredia',geometry:'Geometría municipal alineada a Heredia.png; sentidos marcados por el usuario.',metersPerUnit:MAP.metersPerUnit,speed:11.11,carLength:4.5,minGap:2.5,yellow:3,allRed:1,stopDistance:6,dt:.2};
-export function createNetwork(){const {nodes,edges}=MAP,byId=new Map(nodes.map(n=>[n.id,n])),outgoing=new Map(nodes.map(n=>[n.id,[]])),incoming=new Map(nodes.map(n=>[n.id,[]]));for(const e of edges){outgoing.get(e.from).push(e);incoming.get(e.to).push(e);}return {nodes,edges,byId,outgoing,incoming,boundaries:nodes.filter(n=>n.boundary),edgeById:new Map(edges.map(e=>[e.id,e]))};}
+export function createNetwork(){const {nodes,edges}=MAP,byId=new Map(nodes.map(n=>[n.id,n])),outgoing=new Map(nodes.map(n=>[n.id,[]])),incoming=new Map(nodes.map(n=>[n.id,[]]));for(const e of edges){outgoing.get(e.from).push(e);incoming.get(e.to).push(e);}return {focusZone:MAP.focusZone,nodes,edges,byId,outgoing,incoming,boundaries:nodes.filter(n=>n.boundary),edgeById:new Map(edges.map(e=>[e.id,e]))};}
 // Heap-based Dijkstra keeps the municipal network interactive at hundreds of junctions.
 export function shortestPath(network,origin,destination,cost=()=>0){
   const distances=new Map([[origin,0]]),previous=new Map(),heap=[];

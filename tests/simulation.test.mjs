@@ -35,9 +35,27 @@ test('Signals have clearance phases and bounded adaptive greens',()=>{
 test('Identical fixed scenario reproduces its full results',()=>{const a=new Simulation(options),b=new Simulation(options);for(let i=0;i<1500;i++){a.step();b.step();}assert.deepEqual(a.snapshot(),b.snapshot());assert.deepEqual(a.records,b.records);});
 test('CSV escapes commas, quotes, and includes a UTF-8 BOM',()=>{const out=csv([{label:'a,"b',value:2}]);assert.ok(out.startsWith('\ufeff'));assert.ok(out.includes('"a,""b"'));});
 
-test('Nine controls match the supplied red marks, and every yellow guide has directed road segments',()=>{
+test('Nine controls match the supplied red marks, and every reference corridor has directed road segments',()=>{
  const n=createNetwork(),signals=n.nodes.filter(n=>n.signal);for(const s of signals){assert.equal(s.signalSource,'USER');assert.ok(Math.hypot(s.x-s.annotation[0],s.y-s.annotation[1])<7,s.id);}for(const g of MAP.guides){assert.ok(n.edges.some(e=>e.guide===g.id),g.id);for(const e of n.edges.filter(e=>e.guide===g.id))assert.equal(e.directionSource,'USER');}
 });
 test('Vehicle positions follow polyline bends and finish at the real street endpoint',()=>{const n=createNetwork(),edge=n.edges.find(e=>e.points.length>5);assert.ok(edge);const first=pointOnEdge(edge,0),last=pointOnEdge(edge,edge.length);assert.ok(Math.hypot(first.x-edge.points[0][0],first.y-edge.points[0][1])<.1);assert.ok(Math.hypot(last.x-edge.points.at(-1)[0],last.y-edge.points.at(-1)[1])<.1);assert.ok(Number.isFinite(pointOnEdge(edge,edge.length/2).angle));});
 
 test('The real network has entrances on all four sides, including the eastern approaches to Pirro',()=>{const n=createNetwork();for(const side of ['N','S','E','O'])assert.ok(n.boundaries.some(b=>b.side===side&&b.canEnter),side);assert.ok(n.boundaries.some(b=>b.side==='E'&&b.y>500&&b.y<750&&b.canEnter));});
+
+test('Reference corridors enforce one-way travel and separate opposing lanes',()=>{
+  const n=createNetwork();for(const g of MAP.guides){const es=n.edges.filter(e=>e.guide===g.id);assert.ok(es.length,g.id);for(const e of es){const siblings=n.edges.filter(o=>o.roadId===e.roadId);assert.equal(siblings.length,g.lanes.forward+g.lanes.reverse,g.id);assert.equal(e.laneCount,1);if(siblings.length===2){assert.equal(siblings[0].from,siblings[1].to);assert.equal(siblings[0].to,siblings[1].from);}}}
+  for(const id of ['pirro-norte','hispanoamericana-sur','sanpablo-pirro'])assert.ok(n.edges.some(e=>e.guide===id));
+});
+test('Pirro demand is reproducible, converges from east and south, and preserves vehicles',()=>{
+  const settings={...options,pirroShare:75,blockingPercent:15,demand:2400};const pair=createPair(settings);assert.deepEqual(pair.fixed.arrivals,createArrivals(pair.fixed.network,settings));const targeted=pair.fixed.arrivals.filter(a=>a.via==='pirro');assert.ok(targeted.length>pair.fixed.arrivals.length*.6);for(const side of ['E','S'])assert.ok(targeted.some(a=>pair.fixed.network.byId.get(a.origin).side===side));
+  for(let i=0;i<1500;i++)for(const sim of [pair.fixed,pair.adaptive]){sim.step();assert.equal(sim.generated,sim.completed+sim.vehicles.length+sim.pending.length);for(const v of sim.vehicles){const path=v.path.map(id=>sim.network.edgeById.get(id));for(let j=1;j<path.length;j++)assert.equal(path[j-1].to,path[j].from);}}
+  assert.ok(pair.fixed.snapshot().pirro_cola>0);assert.ok(pair.fixed.blockedSeconds>0);
+});
+test('A vehicle stranded inside Pirro blocks another approach even with green',()=>{
+  const sim=new Simulation({...options,demand:0}),n=sim.network,e=n.incoming.get('pirro').find(e=>e.axis==='H'&&e.length>20),other=n.incoming.get('pirro').find(e=>e.axis==='V'&&e.length>20),out=n.outgoing.get('pirro').find(e=>e.to!==e.from&&e.length>15);
+  sim.signals.get('pirro').phase=()=>({axis:other.axis,phase:'VERDE'});
+  const car=(id,path,p)=>({id,t:0,destination:n.edgeById.get(path.at(-1)).to,path,index:0,p,v:0,wait:0,blocksBox:true});
+  const stranded=car(1,[e.id,out.id],e.length-.6),waiting=car(2,[other.id,out.id],other.length-CONFIG.stopDistance),downstream=car(3,[out.id],0);
+  for(const [edge,v] of [[e,stranded],[other,waiting],[out,downstream]]){sim.lanes.get(edge.id).push(v);sim.activeLanes.add(edge.id);sim.generated++;}
+  sim.step();assert.ok(sim.crossingBlocks.has('pirro'));assert.equal(waiting.p,other.length-CONFIG.stopDistance);assert.ok(sim.blockedSeconds>0);
+});

@@ -1,9 +1,10 @@
 import { CONFIG, createNetwork, shortestPath } from './network.js';
 export function rng(seed){let s=seed>>>0;return()=>{s=(Math.imul(1664525,s)+1013904223)>>>0;return s/4294967296;};}
-export function createArrivals(network,{duration,demand,seed}) {
+export function createArrivals(network,{duration,demand,seed,pirroShare=0}) {
   const random=rng(seed),arrivals=[];let t=0,id=1;
-  const origins=network.boundaries.filter(b=>b.canEnter),destinations=network.boundaries.filter(b=>b.canExit),weights=origins.reduce((sum,n)=>sum+(n.weight||1),0),destinationCache=new Map();
+  const allOrigins=network.boundaries.filter(b=>b.canEnter),focusOrigins=pirroShare>0?allOrigins.filter(b=>(b.side==='S'&&b.x>950&&b.x<1350||b.side==='E'&&b.y>450&&b.y<850)&&shortestPath(network,b.id,'pirro').length):[],origins=allOrigins,destinations=network.boundaries.filter(b=>b.canExit),weights=origins.reduce((sum,n)=>sum+(n.weight||1),0),destinationCache=new Map();
   if(demand===0)return arrivals;
+  const viaDestinations=pirroShare>0?destinations.filter(b=>shortestPath(network,'pirro',b.id).length):[];
   // Exponential interarrival times (Poisson demand); shared verbatim by both scenarios.
   while(true) {
     t+=-Math.log(Math.max(1e-12,1-random()))/(demand/3600);
@@ -11,8 +12,11 @@ export function createArrivals(network,{duration,demand,seed}) {
     let choice=random()*weights,origin=origins[0];for(const n of origins){choice-=n.weight||1;if(choice<=0){origin=n;break;}}
     if(!destinationCache.has(origin.id))destinationCache.set(origin.id,destinations.filter(b=>origin.destinations.includes(b.id)));
     const possible=destinationCache.get(origin.id);if(!possible.length)throw Error(`El acceso ${origin.id} no tiene salida conectada`);
-    const destination=possible[Math.floor(random()*possible.length)];
-    arrivals.push({id:id++,t,origin:origin.id,destination:destination.id,type:random()<.12?'bus':'car'});
+    let via=null;
+    if(pirroShare>0&&random()<pirroShare/100&&focusOrigins.length){origin=focusOrigins[Math.floor(random()*focusOrigins.length)];via='pirro';}
+    const reachable=via?viaDestinations.filter(b=>b.id!==origin.id):possible;
+    const destination=reachable[Math.floor(random()*reachable.length)];
+    arrivals.push({id:id++,t,origin:origin.id,destination:destination.id,via,type:random()<.12?'bus':'car'});
   }
   return arrivals;
 }
@@ -51,10 +55,14 @@ export class Simulation {
     this.options=options;this.adaptive=adaptive;this.network=createNetwork();
     this.arrivals=arrivals??createArrivals(this.network,options);this.cursor=0;this.time=0;
     this.signals=new Map(this.network.nodes.filter(n=>n.signal).map(n=>[n.id,new Signal(n,options,adaptive)]));
-    this.lanes=new Map(this.network.edges.map(e=>[e.id,[]]));this.activeLanes=new Set();this.pending=[];this.completed=0;this.totalTravel=0;this.totalWait=0;this.completedWait=0;this.queueIntegral=0;this.lastQueue=0;this.records=[];this.generated=0;
+    this.lanes=new Map(this.network.edges.map(e=>[e.id,[]]));this.activeLanes=new Set();this.pending=[];this.completed=0;this.totalTravel=0;this.totalWait=0;this.completedWait=0;this.queueIntegral=0;this.lastQueue=0;this.records=[];this.generated=0;this.crossingBlocks=new Map();this.blockedSeconds=0;
   }
-  path(origin,destination) {
-    return shortestPath(this.network,origin,destination,e=>this.options.distribute?this.lanes.get(e.id).length*1.8:0);
+  path(origin,destination,via=null) {
+    const cost=e=>this.options.distribute?this.lanes.get(e.id).length*1.8:0;
+    if(!via||origin===via)return shortestPath(this.network,origin,destination,cost);
+    const entry=shortestPath(this.network,origin,via,cost),last=this.network.edgeById.get(entry.at(-1));
+    const exit=shortestPath(this.network,via,destination,e=>e.from===via&&e.to===last?.from?Infinity:cost(e));
+    return entry.length&&exit.length?[...entry,...exit]:[];
   }
   step(dt=CONFIG.dt) {
     dt=Math.min(dt,this.options.duration-this.time);if(dt<=1e-9)return;
@@ -62,13 +70,16 @@ export class Simulation {
     while(this.cursor<this.arrivals.length && this.arrivals[this.cursor].t<=this.time){this.pending.push({...this.arrivals[this.cursor++]});this.generated++;}
     const remaining=[];
     for(const a of this.pending) {
-      const path=a.initialPath??this.path(a.origin,a.destination);a.initialPath=path;const lane=this.lanes.get(path[0]);
+      const path=a.initialPath??this.path(a.origin,a.destination,a.via);a.initialPath=path;const lane=this.lanes.get(path[0]);
       if(!path.length || lane.some(v=>v.p<CONFIG.carLength+CONFIG.minGap+1)){remaining.push(a);continue;}
-      lane.push({...a,path,index:0,p:0,v:0,wait:this.time-a.t,previousP:0,color:a.type==='bus'?'#1b668b':['#21775b','#d49743','#647488','#4b689c'][a.id%4]});this.activeLanes.add(path[0]);
+      lane.push({...a,path,index:0,p:0,v:0,wait:this.time-a.t,previousP:0,blocksBox:((Math.imul(a.id,2654435761)+this.options.seed)>>>0)%100<(this.options.blockingPercent??0),color:a.type==='bus'?'#1b668b':['#21775b','#d49743','#647488','#4b689c'][a.id%4]});this.activeLanes.add(path[0]);
     }
     this.pending=remaining;
     let queue=this.pending.length,stopped=0,blocked=0;
     const transfers=[];
+    this.crossingBlocks.clear();
+    for(const id of this.activeLanes){const edge=this.network.edgeById.get(id);if(!this.inFocus(edge.to))continue;for(const v of this.lanes.get(id)){const next=v.path[v.index+1];if(v.p>edge.length-CONFIG.stopDistance+.1&&v.v<.5&&next&&this.lanes.get(next).some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1))this.crossingBlocks.set(edge.to,id);}}
+    if(this.crossingBlocks.size)this.blockedSeconds+=dt;
     // Vehicles move front to back; downstream admission is resolved after all lanes move.
     for(const edgeId of [...this.activeLanes]) {
       const e=this.network.edgeById.get(edgeId);
@@ -79,10 +90,11 @@ export class Simulation {
         const signal=this.signals.get(e.to),phase=signal?.phase(this.time);
         const stopPosition=Math.max(0,e.length-CONFIG.stopDistance);
         if(signal && v.p<=stopPosition+1e-7 && !(phase.axis===e.axis && phase.phase==='VERDE'))available=Math.min(available,stopPosition-v.p);
+        if(this.crossingBlocks.has(e.to)&&this.crossingBlocks.get(e.to)!==e.id&&v.p<=stopPosition+1e-7)available=Math.min(available,stopPosition-v.p);
         const next=v.path[v.index+1];
         if(next) {
           const nextLane=this.lanes.get(next);
-          if(nextLane.some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1)){available=Math.min(available,e.length-.6-v.p);if(e.length-v.p<15)blocked++;}
+          if(nextLane.some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1)){const hold=v.p>stopPosition+1e-7||v.blocksBox&&this.inFocus(e.to)?e.length-.6:stopPosition;available=Math.min(available,hold-v.p);if(e.length-v.p<15)blocked++;}
         }
         const target=Math.min(CONFIG.speed,Math.sqrt(Math.max(0,2*4.5*available)));
         v.v=Math.max(0,Math.min(CONFIG.speed,v.v+(v.v<target?2.2:-4.5)*dt));
@@ -93,13 +105,15 @@ export class Simulation {
     }
     for(const {v,e} of transfers) {
       const lane=this.lanes.get(e.id),next=v.path[v.index+1];
+      if(e.to===v.via)v.via=null;
       if(!next) {
         lane.splice(lane.indexOf(v),1);if(!lane.length)this.activeLanes.delete(e.id);this.completed++;this.totalTravel+=this.time-v.t;this.completedWait+=v.wait;continue;
       }
       let newPath=null;
       if(this.options.distribute && !this.network.byId.get(e.to).boundary && v.path.slice(v.index+1,v.index+4).some(id=>this.lanes.get(id).filter(u=>u.v<.5).length>=3)) {
         // Re-route at junctions only. Prevent a U-turn onto the edge just traversed.
-        newPath=shortestPath(this.network,e.to,v.destination,n=>n.to===e.from?10000:this.lanes.get(n.id).length*1.8);
+        newPath=shortestPath(this.network,e.to,v.via??v.destination,n=>n.to===e.from?Infinity:this.lanes.get(n.id).length*1.8);
+        if(v.via&&newPath.length){const last=this.network.edgeById.get(newPath.at(-1));const exit=shortestPath(this.network,v.via,v.destination,n=>n.from===v.via&&n.to===last.from?Infinity:this.lanes.get(n.id).length*1.8);newPath=exit.length?[...newPath,...exit]:null;}
       }
       const nextId=newPath?.[0]??next,nextLane=this.lanes.get(nextId);
       if(nextLane.some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1)){v.p=e.length;v.v=0;continue;}
@@ -111,12 +125,13 @@ export class Simulation {
     for(const [id,signal] of this.signals)signal.update(this.time,dt,this.queuesAt(id),blockedAt(this,id));
     if(Math.floor(oldTime)<Math.floor(this.time))this.records.push(this.snapshot());
   }
+  inFocus(id){const n=this.network.byId.get(id),b=this.network.focusZone?.bounds;return !!b&&n.x>=b[0]&&n.x<=b[2]&&n.y>=b[1]&&n.y<=b[3];}
   queuesAt(id) {
     const q={H:0,V:0};for(const e of this.network.incoming.get(id))q[e.axis]+=this.lanes.get(e.id).filter(v=>v.v<.5 && e.length-v.p<100).length;return q;
   }
   get vehicles(){return [...this.activeLanes].flatMap(id=>this.lanes.get(id));}
   snapshot() {
-    const cars=this.vehicles;return {segundo:+this.time.toFixed(1),modo:this.adaptive?'ADAPTATIVO':'FIJO',generados:this.generated,en_red:cars.length,pendientes:this.pending.length,salidas:this.completed,cola:this.lastQueue,velocidad_kmh:cars.length?+(cars.reduce((s,v)=>s+v.v,0)/cars.length*3.6).toFixed(2):0,espera_media_s:this.completed?+(this.completedWait/this.completed).toFixed(2):0,viaje_medio_s:this.completed?+(this.totalTravel/this.completed).toFixed(2):0,cola_promedio:this.time?+(this.queueIntegral/this.time).toFixed(2):0};
+    const cars=this.vehicles;return {segundo:+this.time.toFixed(1),modo:this.adaptive?'ADAPTATIVO':'FIJO',generados:this.generated,en_red:cars.length,pendientes:this.pending.length,salidas:this.completed,cola:this.lastQueue,velocidad_kmh:cars.length?+(cars.reduce((s,v)=>s+v.v,0)/cars.length*3.6).toFixed(2):0,espera_media_s:this.completed?+(this.completedWait/this.completed).toFixed(2):0,viaje_medio_s:this.completed?+(this.totalTravel/this.completed).toFixed(2):0,pirro_cola:cars.filter(v=>{const e=this.network.edgeById.get(v.path[v.index]);return v.v<.5&&(this.inFocus(e.from)||this.inFocus(e.to));}).length,pirro_bloqueos:this.crossingBlocks.size,pirro_bloqueo_segundos:+this.blockedSeconds.toFixed(1),cola_promedio:this.time?+(this.queueIntegral/this.time).toFixed(2):0};
   }
   sensor(id,distance) {
     const edges=this.network.incoming.get(id);

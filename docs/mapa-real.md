@@ -1,8 +1,8 @@
-# Mapa de referencia y red vial 0.2
+# Mapa de referencia y red vial 0.3
 
 ## Fuentes
 
-- `Heredia.png`, imagen marcada por el usuario el 11 de octubre de 2026. Los nueve puntos rojos son los puntos de control tomados para esta prueba. Las seis flechas amarillas son referencias de flujo y congestión, no mediciones de volumen.
+- `Heredia.png`, imagen marcada por el usuario el 11 de octubre de 2026. Los nueve puntos rojos son los puntos de control tomados para esta prueba. Las flechas amarillas fueron la referencia inicial, sustituida para los sentidos por la nueva imagen de flechas rojas. No son mediciones de volumen.
 - Red Vial Tramos MH, Municipalidad de Heredia: https://sig.heredia.go.cr/server/rest/services/UTGV/RedVIalTramosMH/MapServer/0. Se descargó una instantánea pública de geometrías en Web Mercator, con campos de nombre, longitud, tipo de vía y dirección. El campo `SENTIDO_CARRIL` estaba vacío en los 1.044 registros consultados. Esta capa no se interpretó como un inventario de semáforos.
 - Se revisaron servicios públicos de UTGV, Ingeniería y Policía Municipal, y resultados públicos del MOPT. No se obtuvo un inventario completo, actualizado y verificable de semáforos y ciclos para el área. Las solicitudes de contraste a OpenStreetMap no devolvieron datos utilizables; no se incorporaron datos de esa fuente.
 
@@ -25,8 +25,8 @@ node scripts/prepare-network.mjs
 ## Sentidos, puntos rojos y flujos
 
 - Los nueve controles son los puntos aportados por el usuario; no se añaden semáforos por cada fila del mapa.
-- Las flechas se asocian a tramos cercanos y con orientación compatible. Son referencias dibujadas a mano, algunas desplazadas al lado de la calzada para no taparla.
-- La flecha de salida sur se asoció al tramo municipal de travesía (registro 1911) que discurre desde el entorno de Guayabal hacia la conexión sur. La asociación se limita al tramo que pasa por esa zona, no a todo el conjunto de vías agrupadas bajo ese registro.
+- La nueva imagen de Google Maps anotada por el usuario se transcribió a 31 corredores en `data/direction-reference.json`. Incluye las flechas rojas y flechas pequeñas legibles del mapa. Se alinea con la geometría municipal mediante `data/direction-reference-registration.json` (distancia media aproximada a píxeles viales: 1,0 px). El emparejamiento comprueba proximidad, orientación y cobertura de la polilínea, no solo el extremo de una flecha.
+- El ramal junto a la Hispanoamericana circula al sur hacia La Casona de Laly; el ramal paralelo circula al norte hacia Pirro. La aproximación superior desde San Pablo circula hacia Pirro; la salida inferior de Ruta 5 se orienta al este según la imagen. El tramo La Casona–Miraflores conserva un carril por sentido. Las flechas opuestas crean dos carriles independientes, uno por sentido, no dos carriles en la misma dirección.
 - Los sentidos sin marca **siguen sin verificarse**. El experimento permite ambos sentidos en ellos; no afirma que sean bidireccionales en campo. Deben introducirse las restricciones y giros reales antes de calibrar resultados.
 - Los ciclos, verdes, amarillos y despejes siguen siendo de prueba. La imagen aporta ubicaciones; no tiempos oficiales.
 - Los accesos de la simulación usan demanda sintética. Se ponderan accesos de aproximación a zonas de conflicto, como escenario de estrés; esa ponderación no procede de un aforo.
@@ -42,3 +42,5 @@ Prompt de edición utilizado:
 > Use case: precise-object-edit. Edit target: the supplied marked map screenshot of Heredia, Costa Rica. Produce a cleaned base map for pixel-aligned traffic simulation. CRITICAL INVARIANTS: preserve exact map bounds, aspect ratio, orientation and the exact position/shape of EVERY road, crossing, river, park and railway. Do not redraw, simplify, relocate, invent or crop the road network. Change only clutter: remove business names, shop/restaurant icons, commercial advertisements, hotels, residential development labels and bus stop icons, filling with matching existing map background. Retain small street labels and major geographic landmarks Hospital San Vicente de Paul, Estacion Heredia, Rio Pirro and stadium. Remove the hand-drawn red dots and yellow arrows in this cleaned base ONLY (they will be accurately rebuilt as an interactive overlay in code). Keep the original road colors and very light neutral map background. No added legend, border, dashboard, map elements or decorative graphics. Output a landscape raster map with same framing as input, suitable as the background below exact-positioned overlay vehicles. Accuracy of unchanged geometry is more important than aesthetic changes.
 
 La edición puede simplificar detalles gráficos o rótulos; la referencia original y el snapshot municipal quedan disponibles para revisar y corregir cualquier diferencia. No se modificó `Heredia.png`.
+
+Ver `docs/pirro-2026.md` para los escenarios de hora pico, el factor de demanda y el bloqueo de cruces. La nueva imagen de direcciones no se distribuye ni se utiliza como mapa base.

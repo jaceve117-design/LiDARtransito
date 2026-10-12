@@ -70,3 +70,5 @@ npm run deploy
 El trazado se obtiene de una instantánea municipal y se alinea a Heredia.png. Los tramos con flecha respetan el flujo marcado por el usuario. Los sentidos no marcados se ensayan en ambos sentidos y siguen pendientes de verificación; no se afirma que sean bidireccionales en campo. Los tiempos semafóricos también son de prueba. Los datos mostrados son sintéticos, calculados en cada navegador.
 
 Ouster es una referencia de hardware a evaluar, no una integración o patrocinio: https://ouster.com/industry/smart-infrastructure. El simulador no depende de una marca.
+
+Escenarios de Pirro, horarios, factor ×1,2 y supuestos de bloqueo: [docs/pirro-2026.md](docs/pirro-2026.md). La nueva imagen de flechas se usa únicamente para transcribir sentidos en `data/direction-reference.json`; el mapa público conserva la imagen limpia.

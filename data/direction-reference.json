@@ -1,0 +1,872 @@
+{
+  "version": 1,
+  "date": "2026-10-11",
+  "source": "Imagen de Google Maps anotada por el usuario; flechas rojas y explicación de Pirro. No se publica la imagen.",
+  "registration": {
+    "scale": 1.3182589750758409,
+    "tx": -600.5309855083086,
+    "ty": -129.71081900485137,
+    "meanRoadDistancePx": 1.0031052555889401,
+    "width": 1393,
+    "height": 1167
+  },
+  "guides": [
+    {
+      "id": "calle4-norte",
+      "label": "Rubén Darío · hacia el norte",
+      "points": [
+        [
+          425,
+          649
+        ],
+        [
+          425,
+          128
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "calle2-sur",
+      "label": "Eje central 2 · hacia el sur",
+      "points": [
+        [
+          464.6,
+          129.6
+        ],
+        [
+          470.9,
+          367.1
+        ],
+        [
+          475.4,
+          509.4
+        ],
+        [
+          474.6,
+          651.4
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "central-norte",
+      "label": "Eje central 3 · hacia el norte",
+      "points": [
+        [
+          521,
+          655
+        ],
+        [
+          518,
+          372
+        ],
+        [
+          514,
+          140
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "calle1-sur",
+      "label": "Eje central 4 · hacia el sur",
+      "points": [
+        [
+          562,
+          225
+        ],
+        [
+          568,
+          375
+        ],
+        [
+          567,
+          683
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "calle3-norte",
+      "label": "Eje central 5 · hacia el norte",
+      "points": [
+        [
+          615,
+          666
+        ],
+        [
+          615,
+          246
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "una-oeste-sur",
+      "label": "Costado oeste de la UNA · hacia el sur",
+      "points": [
+        [
+          660,
+          209
+        ],
+        [
+          660,
+          670
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "una-este-norte",
+      "label": "Costado este de la UNA · hacia el norte",
+      "points": [
+        [
+          709,
+          531
+        ],
+        [
+          708,
+          232
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "avenida3-doble",
+      "label": "Avenida 3 · un carril por sentido",
+      "points": [
+        [
+          236,
+          343
+        ],
+        [
+          425,
+          362
+        ],
+        [
+          615,
+          379
+        ],
+        [
+          660,
+          383
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 1
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "avenida1-este",
+      "label": "Avenida 1 · hacia el este",
+      "points": [
+        [
+          224,
+          389
+        ],
+        [
+          659,
+          429
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 8
+    },
+    {
+      "id": "central-oeste",
+      "label": "Avenida central · hacia el oeste",
+      "points": [
+        [
+          660,
+          479
+        ],
+        [
+          221,
+          436
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 8
+    },
+    {
+      "id": "avenida2-este",
+      "label": "Avenida 2 · hacia el este",
+      "points": [
+        [
+          200,
+          483
+        ],
+        [
+          660,
+          526
+        ],
+        [
+          709,
+          531
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 8
+    },
+    {
+      "id": "avenida4-doble",
+      "label": "Avenida 4 · un carril por sentido",
+      "points": [
+        [
+          174,
+          525
+        ],
+        [
+          427,
+          551
+        ],
+        [
+          660,
+          572
+        ],
+        [
+          709,
+          576
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 1
+      },
+      "tolerance": 8
+    },
+    {
+      "id": "avenida6-este",
+      "label": "Avenida 6 · hacia el este",
+      "points": [
+        [
+          165,
+          573
+        ],
+        [
+          427,
+          598
+        ],
+        [
+          660,
+          620
+        ],
+        [
+          710,
+          625
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 8
+    },
+    {
+      "id": "avenida8-este",
+      "label": "Avenida 8 · hacia el este",
+      "points": [
+        [
+          335,
+          637
+        ],
+        [
+          521,
+          655
+        ],
+        [
+          660,
+          669
+        ],
+        [
+          705,
+          672
+        ],
+        [
+          723,
+          674
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 8
+    },
+    {
+      "id": "pirro-norte",
+      "label": "La Casona de Laly → Pirro → Heredia",
+      "points": [
+        [
+          755,
+          869
+        ],
+        [
+          741,
+          769
+        ],
+        [
+          739,
+          746
+        ],
+        [
+          728,
+          684
+        ],
+        [
+          713,
+          663
+        ],
+        [
+          710,
+          625
+        ],
+        [
+          709,
+          576
+        ],
+        [
+          709,
+          531
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7,
+      "sourceIds": [
+        35,
+        36
+      ]
+    },
+    {
+      "id": "hispanoamericana-sur",
+      "label": "Universidad Hispanoamericana → La Casona de Laly",
+      "points": [
+        [
+          660,
+          669
+        ],
+        [
+          660,
+          705
+        ],
+        [
+          667,
+          736
+        ],
+        [
+          694,
+          770
+        ],
+        [
+          720,
+          799
+        ],
+        [
+          742,
+          844
+        ],
+        [
+          755,
+          869
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 7,
+      "sourceIds": [
+        1911
+      ]
+    },
+    {
+      "id": "miraflores-doble",
+      "label": "La Casona de Laly ↔ Miraflores · un carril por sentido",
+      "points": [
+        [
+          755,
+          869
+        ],
+        [
+          762,
+          914
+        ],
+        [
+          776,
+          978
+        ],
+        [
+          798,
+          1047
+        ],
+        [
+          833,
+          1154
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 1
+      },
+      "tolerance": 7
+    },
+    {
+      "id": "ruta5-este",
+      "label": "Salida Ruta 5 hacia el este",
+      "points": [
+        [
+          741,
+          769
+        ],
+        [
+          749,
+          758
+        ],
+        [
+          778,
+          755
+        ],
+        [
+          817,
+          758
+        ],
+        [
+          940,
+          769
+        ],
+        [
+          1094,
+          784
+        ],
+        [
+          1206,
+          845
+        ],
+        [
+          1390,
+          866
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 8
+    },
+    {
+      "id": "ruta5-enlace",
+      "label": "Enlace del ramal norte hacia Ruta 5",
+      "points": [
+        [
+          739,
+          746
+        ],
+        [
+          744,
+          751
+        ],
+        [
+          753,
+          756
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 5,
+      "sourceIds": [
+        35
+      ]
+    },
+    {
+      "id": "sanpablo-pirro",
+      "label": "Maxi Palí San Pablo → Pirro · acceso por el ramal superior",
+      "points": [
+        [
+          1380,
+          747
+        ],
+        [
+          1150,
+          729
+        ],
+        [
+          924,
+          726
+        ],
+        [
+          883,
+          725
+        ],
+        [
+          832,
+          722
+        ],
+        [
+          799,
+          704
+        ],
+        [
+          768,
+          682
+        ],
+        [
+          728,
+          684
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "tolerance": 8,
+      "sourceIds": [
+        1386
+      ]
+    },
+    {
+      "id": "ruta112-doble",
+      "label": "Ruta 112 · un carril por sentido",
+      "points": [
+        [
+          709,
+          531
+        ],
+        [
+          805,
+          540
+        ],
+        [
+          887,
+          563
+        ],
+        [
+          921,
+          547
+        ],
+        [
+          1020,
+          478
+        ]
+      ],
+      "lanes": {
+        "forward": 1,
+        "reverse": 1
+      },
+      "tolerance": 8
+    },
+    {
+      "id": "oeste-1-sur",
+      "label": "Eje oeste 1 · flechas pequeñas hacia el sur",
+      "points": [
+        [
+          190,
+          192
+        ],
+        [
+          191,
+          337
+        ],
+        [
+          192,
+          578
+        ],
+        [
+          190,
+          718
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "oeste-2-norte",
+      "label": "Eje oeste 2 · flechas pequeñas hacia el norte",
+      "points": [
+        [
+          239,
+          724
+        ],
+        [
+          237,
+          436
+        ],
+        [
+          236,
+          153
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "oeste-3-sur",
+      "label": "Eje oeste 3 · flechas pequeñas hacia el sur",
+      "points": [
+        [
+          282,
+          157
+        ],
+        [
+          285,
+          440
+        ],
+        [
+          284,
+          727
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "oeste-4-norte",
+      "label": "Eje oeste 4 · flechas pequeñas hacia el norte",
+      "points": [
+        [
+          332,
+          731
+        ],
+        [
+          332,
+          541
+        ],
+        [
+          333,
+          352
+        ],
+        [
+          329,
+          161
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "oeste-5-sur",
+      "label": "Eje oeste 5 · flechas pequeñas hacia el sur",
+      "points": [
+        [
+          374,
+          119
+        ],
+        [
+          377,
+          357
+        ],
+        [
+          379,
+          642
+        ],
+        [
+          378,
+          737
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "avenida13-este",
+      "label": "Avenida 13 · flechas pequeñas hacia el este",
+      "points": [
+        [
+          235,
+          109
+        ],
+        [
+          420,
+          126
+        ],
+        [
+          464,
+          130
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "avenida11-oeste",
+      "label": "Avenida 11 · flechas pequeñas hacia el oeste",
+      "points": [
+        [
+          660,
+          197
+        ],
+        [
+          465,
+          176
+        ],
+        [
+          236,
+          154
+        ],
+        [
+          184,
+          149
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "avenida7-oeste",
+      "label": "Avenida 7 · flechas pequeñas hacia el oeste",
+      "points": [
+        [
+          660,
+          291
+        ],
+        [
+          516,
+          277
+        ],
+        [
+          236,
+          247
+        ],
+        [
+          190,
+          243
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "avenida5-este",
+      "label": "Avenida 5 · flechas pequeñas hacia el este",
+      "points": [
+        [
+          145,
+          283
+        ],
+        [
+          236,
+          294
+        ],
+        [
+          425,
+          315
+        ],
+        [
+          660,
+          335
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    },
+    {
+      "id": "avenida12-este",
+      "label": "Avenida 12 · flechas pequeñas hacia el este",
+      "points": [
+        [
+          5,
+          700
+        ],
+        [
+          239,
+          723
+        ],
+        [
+          521,
+          748
+        ],
+        [
+          660,
+          761
+        ]
+      ],
+      "tolerance": 7,
+      "lanes": {
+        "forward": 1,
+        "reverse": 0
+      },
+      "source": "USER_MAP_SMALL_ARROWS"
+    }
+  ],
+  "unmarkedPolicy": "UNCONFIRMED: ambos sentidos provisionales; no extrapolar giros obligatorios."
+}
