@@ -22,6 +22,10 @@ npm test
 npm run build
 ```
 
+## Demanda y coordinación v0.5.0
+
+Aforo Pirro 2019 + crecimiento nacional MOPT/INS → escenario aproximado de 2026, perfil de 24 horas histórico E9 La Puebla, llegadas compartidas, coordinación por distancia y dispersión con continuidad de viajes. Fórmulas, fuentes y límites: [demanda-coordinacion-2026.md](docs/demanda-coordinacion-2026.md). Esta versión reemplaza el multiplicador fijo y el Q-learning en la interfaz; los documentos v0.3/v0.4 describen antecedentes.
+
 ## Archivos
 
 - `public/index.html`: página, controles, indicadores y textos.

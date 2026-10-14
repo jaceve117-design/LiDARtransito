@@ -1,6 +1,10 @@
 import { CONFIG, createNetwork, shortestPath } from './network.js';
+import { demandSegments } from './traffic-demand.js';
+import { coordinationPlans,CoordinatedSignal,Coordinator } from './coordination.js';
 export function rng(seed){let s=seed>>>0;return()=>{s=(Math.imul(1664525,s)+1013904223)>>>0;return s/4294967296;};}
-export function createArrivals(network,{duration,demand,seed,pirroShare=0}) {
+export function createArrivals(network,options) {
+  const {duration,demand,seed,pirroShare=0}=options;
+  if(options.demandMode==='estimated')return createEstimatedArrivals(network,options);
   const random=rng(seed),arrivals=[];let t=0,id=1;
   const allOrigins=network.boundaries.filter(b=>b.canEnter),focusOrigins=pirroShare>0?allOrigins.filter(b=>(b.side==='S'&&b.x>950&&b.x<1350||b.side==='E'&&b.y>450&&b.y<850)&&shortestPath(network,b.id,'pirro').length):[],origins=allOrigins,destinations=network.boundaries.filter(b=>b.canExit),weights=origins.reduce((sum,n)=>sum+(n.weight||1),0),destinationCache=new Map();
   if(demand===0)return arrivals;
@@ -18,6 +22,28 @@ export function createArrivals(network,{duration,demand,seed,pirroShare=0}) {
     let destination=reachable[Math.floor(random()*reachable.length)];const type=random()<.12?'bus':'car';let service=null;
     if(type==='bus'&&origin.side==='O'){const south=destinations.filter(b=>b.side==='S'&&b.x>950&&b.x<1350&&shortestPath(network,'mh-702',b.id,()=>0,{vehicleType:'bus'}).length);if(south.length&&shortestPath(network,origin.id,'mh-702',()=>0,{vehicleType:'bus'}).length){via='mh-702';destination=south[Math.floor(random()*south.length)];service='san-jose';}}
     arrivals.push({id:id++,t,origin:origin.id,destination:destination.id,via,type,service});
+  }
+  return arrivals;
+}
+// Requests are an estimated two-way Pirro-zone demand, not measured directional flows.
+export const DISPERSION_NODE='mh-50'; // Northern gateway beside Calle 7 / Avenida 5.
+export function createEstimatedArrivals(network,options){
+  const random=rng(options.seed),arrivals=[],cache=new Map(),northOrigins=network.boundaries.filter(n=>n.canEnter&&(n.side==='S'&&n.x>950&&n.x<1350||n.side==='E'&&n.y>450&&n.y<850)),outOrigins=network.boundaries.filter(n=>n.canEnter&&(n.side==='N'||n.side==='O'));
+  const exits=network.boundaries.filter(n=>n.canExit),southExits=exits.filter(n=>n.side==='S'&&n.x>950&&n.x<1350);
+  const directions=[['O',options.dispersalWest??45],['N',options.dispersalNorth??35],['E',100-(options.dispersalWest??45)-(options.dispersalNorth??35)]];
+  function route(origin,dest,waypoints,type){const key=[origin,dest,...waypoints,type].join(':');if(cache.has(key))return cache.get(key);let path=[],at=origin,last=null;
+    for(const target of [...waypoints,dest]){const leg=shortestPath(network,at,target,e=>last&&e.from===at&&e.to===last.from?Infinity:0,{vehicleType:type,incomingEdgeId:last?.id});if(!leg.length){cache.set(key,[]);return [];}path.push(...leg);last=network.edgeById.get(leg.at(-1));at=target;}cache.set(key,path);return path;}
+  // Build valid route pools once, including bus maneuver constraints.
+  const pools={};for(const type of ['car','bus']){pools[type]={north:[],out:[]};for(const [side,weight]of directions){if(weight<=0)continue;const routes=[];for(const origin of northOrigins)for(const dest of exits.filter(n=>n.side===side)){if(origin.id===dest.id)continue;const path=route(origin.id,dest.id,['pirro',DISPERSION_NODE],type);if(path.length)routes.push({origin:origin.id,destination:dest.id,initialPath:path,via:DISPERSION_NODE,direction:side});}if(!routes.length)throw Error('Sin salida conectada al '+side);pools[type].north.push({weight,routes});}
+    for(const origin of outOrigins)for(const dest of southExits){const path=route(origin.id,dest.id,['mh-726'],type);if(path.length)pools[type].out.push({origin:origin.id,destination:dest.id,initialPath:path,via:'mh-726',direction:'S'});}if(!pools[type].out.length)throw Error('Sin ruta de salida hacia Miraflores');}
+  let cumulative=0,id=1;
+  for(const segment of demandSegments(options.startHour??15,options.duration,options.estimateYear??2026)){
+    const before=Math.round(cumulative);cumulative+=segment.expected;const count=Math.round(cumulative)-before;
+    for(let i=0;i<count;i++){const t=segment.start+(i+random())/count*(segment.end-segment.start),type=random()<.12?'bus':'car',north=random()<(options.pirroShare??60)/100;let selected;
+      if(north){let pick=random()*100,group=pools[type].north.at(-1);for(const g of pools[type].north){pick-=g.weight;if(pick<=0){group=g;break;}}selected=group.routes[Math.floor(random()*group.routes.length)];}
+      else selected=pools[type].out[Math.floor(random()*pools[type].out.length)];
+      arrivals.push({id:id++,t,...selected,type,service:type==='bus'&&!north?'san-jose':null,profile:true,northbound:north});
+    }
   }
   return arrivals;
 }
@@ -55,7 +81,9 @@ export class Simulation {
   constructor(options,adaptive=false,arrivals=null) {
     this.options=options;this.adaptive=adaptive;this.network=createNetwork();
     this.arrivals=arrivals??createArrivals(this.network,options);this.cursor=0;this.time=0;
-    this.signals=new Map(this.network.nodes.filter(n=>n.signal).map(n=>[n.id,new Signal(n,options,adaptive)]));
+    this.plans=adaptive&&options.coordinated?coordinationPlans(this.network,options.waveSpeed??30,options.waveSource):null;
+    this.signals=new Map(this.network.nodes.filter(n=>n.signal).map(n=>[n.id,this.plans?new CoordinatedSignal(n,options,this.plans.get(n.id)):new Signal(n,options,adaptive)]));
+    this.coordinator=this.plans?new Coordinator(this.signals,options.cycle):null;this.dispersed=0;this.dispersedDirections={O:0,N:0,E:0};
     this.lanes=new Map(this.network.edges.map(e=>[e.id,[]]));this.activeLanes=new Set();this.pending=[];this.completed=0;this.totalTravel=0;this.totalWait=0;this.completedWait=0;this.queueIntegral=0;this.lastQueue=0;this.records=[];this.generated=0;this.crossingBlocks=new Map();this.blockedSeconds=0;this.yieldWaitSeconds=0;this.trainWaitSeconds=0;this.yieldWaiters=new Set();this.trainWaiters=new Set();this.junctionOccupancy=new Map();
   }
   path(origin,destination,via=null,vehicleType='car') {
@@ -111,12 +139,12 @@ export class Simulation {
     }
     for(const {v,e} of transfers) {
       const lane=this.lanes.get(e.id),next=v.path[v.index+1];
-      if(e.to===v.via)v.via=null;
+      if(e.to===v.via){if(v.profile&&v.northbound&&e.to===DISPERSION_NODE){this.dispersed++;this.dispersedDirections[v.direction]++;}v.via=null;}
       if(!next) {
         lane.splice(lane.indexOf(v),1);if(!lane.length)this.activeLanes.delete(e.id);this.completed++;this.totalTravel+=this.time-v.t;this.completedWait+=v.wait;continue;
       }
       let newPath=null;
-      if(this.options.distribute && !this.network.byId.get(e.to).boundary && v.path.slice(v.index+1,v.index+4).some(id=>this.lanes.get(id).filter(u=>u.v<.5).length>=3)) {
+      if(this.options.distribute && (!v.profile||!v.via) && !this.network.byId.get(e.to).boundary && v.path.slice(v.index+1,v.index+4).some(id=>this.lanes.get(id).filter(u=>u.v<.5).length>=3)) {
         // Re-route at junctions only. Prevent a U-turn onto the edge just traversed.
         newPath=shortestPath(this.network,e.to,v.via??v.destination,n=>n.to===e.from?Infinity:this.lanes.get(n.id).length*1.8,{vehicleType:v.type,incomingEdgeId:e.id});
         if(v.via&&newPath.length){const last=this.network.edgeById.get(newPath.at(-1));const exit=shortestPath(this.network,v.via,v.destination,n=>n.from===v.via&&n.to===last.from?Infinity:this.lanes.get(n.id).length*1.8,{vehicleType:v.type,incomingEdgeId:last.id});newPath=exit.length?[...newPath,...exit]:null;}
@@ -133,6 +161,7 @@ export class Simulation {
     }
     this.yieldWaitSeconds+=this.yieldWaiters.size*dt;this.trainWaitSeconds+=this.trainWaiters.size*dt;
     queue+=stopped;this.lastQueue=queue;this.queueIntegral+=queue*dt;this.totalWait+=queue*dt;
+    this.coordinator?.update(this.time,this);
     for(const [id,signal] of this.signals)signal.update(this.time,dt,this.queuesAt(id),blockedAt(this,id));
     if(Math.floor(oldTime)<Math.floor(this.time))this.records.push(this.snapshot());
   }
@@ -157,7 +186,7 @@ export class Simulation {
   }
   get vehicles(){return [...this.activeLanes].flatMap(id=>this.lanes.get(id));}
   snapshot() {
-    const cars=this.vehicles;return {segundo:+this.time.toFixed(1),modo:this.adaptive?'ADAPTATIVO':'FIJO',generados:this.generated,en_red:cars.length,pendientes:this.pending.length,salidas:this.completed,cola:this.lastQueue,velocidad_kmh:cars.length?+(cars.reduce((s,v)=>s+v.v,0)/cars.length*3.6).toFixed(2):0,espera_media_s:this.completed?+(this.completedWait/this.completed).toFixed(2):0,viaje_medio_s:this.completed?+(this.totalTravel/this.completed).toFixed(2):0,ceda_esperando:this.yieldWaiters.size,ceda_espera_vehiculo_segundos:+this.yieldWaitSeconds.toFixed(1),tren_cerrado:this.trainClosed()?1:0,tren_esperando:this.trainWaiters.size,tren_espera_vehiculo_segundos:+this.trainWaitSeconds.toFixed(1),pirro_cola:cars.filter(v=>{const e=this.network.edgeById.get(v.path[v.index]);return v.v<.5&&(this.inFocus(e.from)||this.inFocus(e.to));}).length,pirro_bloqueos:this.crossingBlocks.size,pirro_bloqueo_segundos:+this.blockedSeconds.toFixed(1),cola_promedio:this.time?+(this.queueIntegral/this.time).toFixed(2):0};
+    const cars=this.vehicles;return {segundo:+this.time.toFixed(1),modo:this.adaptive?'ADAPTATIVO':'FIJO',generados:this.generated,dispersados_norte:this.dispersed,dispersados_oeste:this.dispersedDirections.O,dispersados_norte_salida:this.dispersedDirections.N,dispersados_este:this.dispersedDirections.E,en_red:cars.length,pendientes:this.pending.length,salidas:this.completed,cola:this.lastQueue,velocidad_kmh:cars.length?+(cars.reduce((s,v)=>s+v.v,0)/cars.length*3.6).toFixed(2):0,espera_media_s:this.completed?+(this.completedWait/this.completed).toFixed(2):0,viaje_medio_s:this.completed?+(this.totalTravel/this.completed).toFixed(2):0,ceda_esperando:this.yieldWaiters.size,ceda_espera_vehiculo_segundos:+this.yieldWaitSeconds.toFixed(1),tren_cerrado:this.trainClosed()?1:0,tren_esperando:this.trainWaiters.size,tren_espera_vehiculo_segundos:+this.trainWaitSeconds.toFixed(1),pirro_cola:cars.filter(v=>{const e=this.network.edgeById.get(v.path[v.index]);return v.v<.5&&(this.inFocus(e.from)||this.inFocus(e.to));}).length,pirro_bloqueos:this.crossingBlocks.size,pirro_bloqueo_segundos:+this.blockedSeconds.toFixed(1),cola_promedio:this.time?+(this.queueIntegral/this.time).toFixed(2):0};
   }
   sensor(id,distance) {
     const edges=this.network.incoming.get(id);
