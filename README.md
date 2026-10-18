@@ -22,6 +22,10 @@ npm test
 npm run build
 ```
 
+## Control por demanda y cupos v0.6.0
+
+Lotes de hasta 10 vehículos, reservas compartidas de espacio, retención de entradas y avisos de llegada al siguiente semáforo. Parámetros editables y comparación con el fijo. [Lógica y límites](docs/control-demanda-cupos.md). Desactivar el control por cupos recupera v0.5.
+
 ## Demanda y coordinación v0.5.0
 
 Aforo Pirro 2019 + crecimiento nacional MOPT/INS → escenario aproximado de 2026, perfil de 24 horas histórico E9 La Puebla, llegadas compartidas, coordinación por distancia y dispersión con continuidad de viajes. Fórmulas, fuentes y límites: [demanda-coordinacion-2026.md](docs/demanda-coordinacion-2026.md). Esta versión reemplaza el multiplicador fijo y el Q-learning en la interfaz; los documentos v0.3/v0.4 describen antecedentes.
