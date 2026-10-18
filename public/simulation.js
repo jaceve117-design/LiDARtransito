@@ -163,6 +163,7 @@ export class Simulation {
       const nextLane=this.lanes.get(nextId);
       if(nextLane.some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1)){v.p=e.length;v.v=0;continue;}
       lane.splice(lane.indexOf(v),1);if(!lane.length)this.activeLanes.delete(e.id);
+      v.previousEdge=e.id;
       if(newPath?.length){v.path=newPath;v.index=0;}else v.index++;
       this.meter?.entered(v,nextId);delete v.meterPermit;v.p=0;v.previousP=0;nextLane.push(v);this.activeLanes.add(nextId);
     }

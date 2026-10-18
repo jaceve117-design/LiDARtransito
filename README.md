@@ -82,3 +82,9 @@ Ouster es una referencia de hardware a evaluar, no una integración o patrocinio
 Escenarios de Pirro, horarios, factor ×1,2 y supuestos de bloqueo: [docs/pirro-2026.md](docs/pirro-2026.md). La nueva imagen de flechas se usa únicamente para transcribir sentidos en `data/direction-reference.json`; el mapa público conserva la imagen limpia.
 
 Cedas, giros de buses, semáforo oeste y tren (v0.4.0): [docs/prioridades-pirro.md](docs/prioridades-pirro.md).
+
+## Giros visuales v0.6.1
+
+Los vehículos enlazan el carril de entrada y salida con una curva Bézier y orientan su dibujo con la tangente de la curva. El cuerpo gira desde su centro. La transición comienza después de la línea de detención, conserva el desplazamiento hacia la derecha de cada sentido y guarda el tramo anterior al cambiar de ruta. Es una corrección de representación: no cambia tiempos, velocidades, aforos ni reglas de prioridad. Las pruebas incluyen continuidad de posición en todas las conexiones municipales transitables y giros sintéticos a derecha e izquierda.
+
+La v0.6.1 también corrige el bloqueo circular del control por cupos: reserva el primer tramo receptor y conserva el pronóstico al siguiente semáforo. Véase el ensayo de 90 minutos en [docs/ensayo-cupos-v0.6.1.json](docs/ensayo-cupos-v0.6.1.json).

@@ -26,3 +26,41 @@ test('Metered traffic conserves vehicles, keeps spacing and exactly accounts for
  if(i%20===0){const expected=new Map();for(const r of sim.meter.reservations.values())for(const id of r.edges)expected.set(id,(expected.get(id)??0)+r.cost);assert.deepEqual(sim.meter.reservedByEdge,expected);for(const id of sim.activeLanes){const lane=[...sim.lanes.get(id)].sort((a,b)=>b.p-a.p);for(let j=1;j<lane.length;j++)assert.ok(lane[j-1].p-lane[j].p>=CONFIG.carLength+CONFIG.minGap-1e-7);}}}
  assert.ok(p.adaptive.completed>0);assert.ok(p.adaptive.meter.admitted>0);assert.ok([...p.adaptive.signals.values()].some(s=>s.history.some(h=>h.fase==='TODO_ROJO')));
 });
+
+test('A full distant link cannot hold an intersection with immediate receiving space',()=>{
+ const sim=createPair(options).adaptive,m=sim.meter,net=sim.network;
+ const candidates=net.edges.filter(e=>e.length>80&&!sim.signals.has(e.to)&&!net.byId.get(e.to).boundary);
+ const first=candidates.find(e=>net.outgoing.get(e.to).some(n=>n.length>80));
+ const next=net.outgoing.get(first.to).find(e=>e.length>80);
+ const v={id:99801,type:'car',index:0,path:['upstream',first.id,next.id]};
+ sim.lanes.get(next.id).push(...Array.from({length:m.capacity(next.id)},(_,i)=>({id:99000+i,type:'car'})));
+ assert.equal(m.status(next.id).available,0);assert.equal(m.canReserve(v),true);assert.equal(m.reserve(v),true);
+ assert.equal(m.reservedByEdge.get(first.id),1);assert.equal(m.reservedByEdge.has(next.id),false);
+ m.release(v);sim.lanes.get(first.id).push(...Array.from({length:m.capacity(first.id)},(_,i)=>({id:98000+i,type:'car'})));
+ assert.equal(m.canReserve(v),false);
+});
+
+test('The first storage link is reserved while the next signal still receives the full-route arrival notice',()=>{
+ const sim=createPair(options).adaptive,m=sim.meter,net=sim.network;
+ // Select an actual upstream route containing more than one storage segment.
+ const path=sim.path('pirro-sur','pirro');assert.ok(path.length>1);
+ const v={id:99802,type:'car',index:0,path:['upstream',...path]};
+ assert.equal(m.reserve(v),true);assert.equal(m.reservations.get(v.id).edges.size,1);
+ const signal=sim.signals.get('pirro'),notice=signal.arrivals.get(v.id);assert.ok(notice);
+ const expected=m.section(v).reduce((sum,id)=>sum+net.edgeById.get(id).length,0)/((sim.options.waveSpeed??30)/3.6);
+ assert.ok(Math.abs(notice.eta-expected)<1e-8);assert.ok(expected>net.edgeById.get(path[0]).length/((sim.options.waveSpeed??30)/3.6));
+});
+
+test('Pirro continues serving demand after 30 minutes instead of locking every future receiver',()=>{
+ const sim=createPair({...options,duration:3600,demandMode:'estimated',startHour:15,estimateYear:2026,pirroShare:75,blockingPercent:15,trainEnabled:true,trainPeriod:600,trainDuration:45,trainOffset:120}).adaptive;
+ let atThirty=0,atFifty=0;
+ for(let tick=1;tick<=18000;tick++){
+   sim.step();
+   if(tick===9000)atThirty=sim.completed;
+   if(tick===15000)atFifty=sim.completed;
+   if(tick%3000===0){assert.equal(sim.generated,sim.completed+sim.vehicles.length+sim.pending.length);}
+ }
+ assert.ok(atFifty>atThirty+50,`30 min: ${atThirty}; 50 min: ${atFifty}`);
+ assert.ok(sim.completed>atFifty+20);
+ for(const id of ['pirro','pirro-sur'])assert.ok(sim.signals.get(id).history.some(h=>h.fase==='VERDE'&&h.segundo>3000),id);
+});
