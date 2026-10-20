@@ -6,8 +6,8 @@ function turnGeometry(incoming,outgoing,offset){
   if(!incoming||!outgoing||incoming.to!==outgoing.from)return null;
   const radius=Math.min(5.5,incoming.length/2,outgoing.length/2);
   if(radius<1e-6)return null;
-  const a=pointOnEdge(incoming,incoming.length-radius,offset);
-  const b=pointOnEdge(outgoing,radius,offset);
+  const a=pointOnEdge(incoming,incoming.length-radius,typeof offset==='function'?offset(incoming):offset);
+  const b=pointOnEdge(outgoing,radius,typeof offset==='function'?offset(outgoing):offset);
   const start=a.angle*Math.PI/180,end=b.angle*Math.PI/180;
   const handle=Math.min(radius/CONFIG.metersPerUnit*.5523,Math.hypot(b.x-a.x,b.y-a.y)*.55);
   return {radius,a,b,c:{x:a.x+Math.cos(start)*handle,y:a.y+Math.sin(start)*handle},d:{x:b.x-Math.cos(end)*handle,y:b.y-Math.sin(end)*handle}};
@@ -28,5 +28,5 @@ export function vehiclePose(network,vehicle,offset=1.5){
   if(entry&&vehicle.p<entry.radius)return onTurn(entry,.5+vehicle.p/(2*entry.radius));
   const exit=turnGeometry(edge,next,offset);
   if(exit&&vehicle.p>edge.length-exit.radius)return onTurn(exit,(vehicle.p-edge.length+exit.radius)/(2*exit.radius));
-  return pointOnEdge(edge,vehicle.p,offset);
+  return pointOnEdge(edge,vehicle.p,typeof offset==='function'?offset(edge):offset);
 }

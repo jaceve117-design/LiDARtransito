@@ -64,3 +64,25 @@ test('Pirro continues serving demand after 30 minutes instead of locking every f
  assert.ok(sim.completed>atFifty+20);
  for(const id of ['pirro','pirro-sur'])assert.ok(sim.signals.get(id).history.some(h=>h.fase==='VERDE'&&h.segundo>3000),id);
 });
+
+test('A bus lacking three slots does not close a receiver that has room for cars',()=>{
+ const sim=createPair(options).adaptive,m=sim.meter,e=sim.network.edges.find(e=>e.length>80&&e.length<150);
+ const capacity=m.capacity(e.id);sim.lanes.get(e.id).push(...Array.from({length:capacity-2},(_,id)=>({id,type:'car'})));
+ const bus={id:7800,type:'bus',index:0,path:['upstream',e.id]},car={...bus,id:7801,type:'car'};
+ assert.equal(m.canReserve(bus),false);assert.equal(m.closed.has(e.id),false);assert.equal(m.reserve(car),true);assert.equal(m.status(e.id).available,1);
+});
+test('Reopening hysteresis is bounded while never admitting a vehicle without its receiving space',()=>{
+ const sim=createPair(options).adaptive,m=sim.meter,e=sim.network.edges.find(e=>e.length>80&&e.length<150),capacity=m.capacity(e.id);
+ const car={id:7802,type:'car',index:0,path:['upstream',e.id]},bus={...car,id:7803,type:'bus'};
+ sim.lanes.get(e.id).push(...Array.from({length:capacity},(_,id)=>({id,type:'car'})));
+ assert.equal(m.canReserve(car),false);sim.lanes.get(e.id).pop();assert.equal(m.canReserve(car),false);
+ sim.time=5;assert.equal(m.canReserve(car),true);assert.equal(m.canReserve(bus),false);assert.equal(m.reserve(car),true);assert.equal(m.status(e.id).available,0);assert.equal(m.reserve({...car,id:7804}),false);
+});
+
+test('Unreserved entrances cannot spend space already promised to another vehicle',()=>{
+ const sim=createPair(options).adaptive,m=sim.meter,e=sim.network.edges.find(e=>e.length>80&&e.length<150),capacity=m.capacity(e.id);
+ sim.lanes.get(e.id).push(...Array.from({length:capacity-1},(_,id)=>({id,type:'car'})));
+ const reserved={id:7900,type:'car',index:0,path:['upstream',e.id]},other={...reserved,id:7901};assert.equal(m.reserve(reserved),true);
+ assert.equal(m.canEnter(other,e.id),false);assert.equal(m.canEnter(reserved,e.id),true);
+ sim.lanes.get(e.id).push(reserved);m.entered(reserved,e.id);assert.equal(m.status(e.id).occupied,capacity);assert.equal(m.status(e.id).reserved,0);
+});

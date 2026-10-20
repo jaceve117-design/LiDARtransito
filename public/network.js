@@ -1,8 +1,26 @@
 import { MAP } from './network-data.js';
 export { MAP };
 export const CONFIG={label:'Casco central de Heredia',geometry:'Geometría municipal alineada a Heredia.png; sentidos marcados por el usuario.',metersPerUnit:MAP.metersPerUnit,speed:11.11,carLength:4.5,minGap:2.5,yellow:3,allRed:1,stopDistance:6,dt:.2};
-export function createNetwork(){const {nodes,edges}=MAP,byId=new Map(nodes.map(n=>[n.id,n])),outgoing=new Map(nodes.map(n=>[n.id,[]])),incoming=new Map(nodes.map(n=>[n.id,[]]));for(const e of edges){outgoing.get(e.from).push(e);incoming.get(e.to).push(e);}const movementRules=MAP.movementRules,ruleByNode=new Map((movementRules?.junctions??[]).map(j=>[j.node,j])),yieldByIncoming=new Map(),busTurns=new Map();for(const j of ruleByNode.values()){for(const rule of j.yields??[]){if(!yieldByIncoming.has(rule.incoming))yieldByIncoming.set(rule.incoming,[]);yieldByIncoming.get(rule.incoming).push({...rule,node:j.node});}for(const rule of j.busTurns??[])busTurns.set(rule.incoming,new Set(rule.outgoing));}
-return {movementRules,ruleByNode,yieldByIncoming,busTurns,focusZone:MAP.focusZone,nodes,edges,byId,outgoing,incoming,boundaries:nodes.filter(n=>n.boundary),edgeById:new Map(edges.map(e=>[e.id,e]))};}
+export function createNetwork(layout=null){
+ let {nodes,edges}=MAP;
+ if(layout){
+  nodes=nodes.map(n=>({...n,...layout.nodes?.[n.id]}));const positions=new Map(nodes.map(n=>[n.id,n]));
+  edges=edges.map(e=>{const road=layout.roads?.[e.roadId];let points=road?(road.from===e.from?road.points:road.points.toReversed()).map(p=>[...p]):e.points.map(p=>[...p]);const from=positions.get(e.from),to=positions.get(e.to);points[0]=[from.x,from.y];points[points.length-1]=[to.x,to.y];const length=points.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p[0]-points[i][0],p[1]-points[i][1])*MAP.metersPerUnit,0);return {...e,points,length};});
+  if(layout.vector){
+   const groups=new Map();for(const e of edges){if(!groups.has(e.roadId))groups.set(e.roadId,[]);groups.get(e.roadId).push(e);}
+   for(const [id,group]of groups){const base=group[0],saved=layout.streets?.[id],from=saved?.from??base.from;
+    if(saved&&group.length===1){const opposite={...base,id:id+'-editor-reverse',from:base.to,to:base.from,points:base.points.toReversed()};group.push(opposite);edges.push(opposite);}
+    for(const e of group){e.laneCount=saved?(e.from===from?saved.forward:saved.reverse):(e.laneCount??1);e.laneWidth=saved?.width??layout.laneWidth;e.opposingLanes=group.filter(r=>r.from!==e.from).reduce((sum,r)=>sum+(saved?(r.from===from?saved.forward:saved.reverse):(r.laneCount??1)),0);}
+   }
+  }
+ }
+ const byId=new Map(nodes.map(n=>[n.id,n])),outgoing=new Map(nodes.map(n=>[n.id,[]])),incoming=new Map(nodes.map(n=>[n.id,[]]));
+ for(const e of edges){outgoing.get(e.from).push(e);incoming.get(e.to).push(e);}
+ if(layout?.vector)for(const n of nodes.filter(n=>n.boundary)){n.canEnter=outgoing.get(n.id).some(e=>e.laneCount>0);n.canExit=incoming.get(n.id).some(e=>e.laneCount>0);}
+ const movementRules=MAP.movementRules,ruleByNode=new Map((movementRules?.junctions??[]).map(j=>[j.node,j])),yieldByIncoming=new Map(),busTurns=new Map();
+ for(const j of ruleByNode.values()){for(const rule of j.yields??[]){if(!yieldByIncoming.has(rule.incoming))yieldByIncoming.set(rule.incoming,[]);yieldByIncoming.get(rule.incoming).push({...rule,node:j.node});}for(const rule of j.busTurns??[])busTurns.set(rule.incoming,new Set(rule.outgoing));}
+ return {movementRules,ruleByNode,yieldByIncoming,busTurns,focusZone:MAP.focusZone,nodes,edges,byId,outgoing,incoming,boundaries:nodes.filter(n=>n.boundary),edgeById:new Map(edges.map(e=>[e.id,e]))};
+}
 // Heap-based Dijkstra keeps the municipal network interactive at hundreds of junctions.
 export function shortestPath(network,origin,destination,cost=()=>0,{vehicleType='car',incomingEdgeId=null}={}){
   const constrained=vehicleType==='bus'&&network.busTurns?.size>0,keyFor=(id,edge)=>constrained?edge??'start':id,initial=keyFor(origin,incomingEdgeId),distances=new Map([[initial,0]]),previous=new Map(),heap=[];
@@ -11,7 +29,7 @@ export function shortestPath(network,origin,destination,cost=()=>0,{vehicleType=
   let finalKey=null;push(origin,initial,incomingEdgeId,0);
   while(heap.length){const {id,key,incoming,d}=pop();if(d!==(distances.get(key)??Infinity))continue;if(id===destination){finalKey=key;break;}
     const allowed=constrained?network.busTurns.get(incoming):null,prior=network.edgeById.get(incoming);
-    for(const e of network.outgoing.get(id)||[]){if(allowed&&!allowed.has(e.id)||prior&&e.to===prior.from||network.byId.get(e.to).boundary&&e.to!==destination)continue;
+    for(const e of network.outgoing.get(id)||[]){if(e.laneCount===0||allowed&&!allowed.has(e.id)||prior&&e.to===prior.from||network.byId.get(e.to).boundary&&e.to!==destination)continue;
       const next=d+e.length/CONFIG.speed+cost(e),nextKey=keyFor(e.to,e.id);if(next<(distances.get(nextKey)??Infinity)){distances.set(nextKey,next);previous.set(nextKey,{edge:e,key});push(e.to,nextKey,e.id,next);}}
   }
   if(finalKey===null)return [];const result=[];let at=finalKey;while(at!==initial){const p=previous.get(at);if(!p)return [];result.unshift(p.edge.id);at=p.key;}return result;

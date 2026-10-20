@@ -24,18 +24,30 @@ export class ActuatedSignal {
   }
 }
 export class SpaceMeter {
-  constructor(sim,options){this.sim=sim;this.margin=options.reserveSlots??2;this.refill=options.refillSlots??3;this.reservations=new Map();this.reservedByEdge=new Map();this.closed=new Set();this.held=new Set();this.admitted=0;this.holdSeconds=0;}
+  constructor(sim,options){this.sim=sim;this.margin=options.reserveSlots??2;this.refill=options.refillSlots??3;this.reservations=new Map();this.reservedByEdge=new Map();this.closed=new Set();this.closedSince=new Map();this.refillWait=5;this.held=new Set();this.admitted=0;this.holdSeconds=0;}
   cost(v){return v.type==='bus'?3:1;}
-  capacity(id){const e=this.sim.network.edgeById.get(id),physical=Math.max(1,Math.floor(e.length/(CONFIG.carLength+CONFIG.minGap)));return Math.max(1,physical-Math.min(this.margin,Math.floor(physical*.15)));}
+  capacity(id){const e=this.sim.network.edgeById.get(id),physical=Math.max(1,Math.floor(e.length/(CONFIG.carLength+CONFIG.minGap)));return Math.max(1,physical-Math.min(this.margin,Math.floor(physical*.15)))*this.sim.laneCount(id);}
   status(id){const capacity=this.capacity(id),occupied=this.sim.lanes.get(id).reduce((s,v)=>s+this.cost(v),0),reserved=this.reservedByEdge.get(id)??0,available=Math.max(0,capacity-occupied-reserved);return {edge:id,capacity,occupied,reserved,available};}
   section(v){const ids=[];let distance=0;for(let i=v.index+1;i<v.path.length;i++){const id=v.path[i],e=this.sim.network.edgeById.get(id);ids.push(id);distance+=e.length;if(this.sim.signals.has(e.to)||this.sim.network.byId.get(e.to).boundary||distance>=600)break;}return ids;}
   // Gate only the next storage link. Reserving every future link creates circular holds.
   receivingSection(v){const ids=[];let distance=0;for(let i=v.index+1;i<v.path.length;i++){const id=v.path[i],e=this.sim.network.edgeById.get(id);ids.push(id);distance+=e.length;if(e.length>=21||this.sim.signals.has(e.to)||this.sim.network.byId.get(e.to).boundary||distance>=600)break;}return ids;}
-  canReserve(v){const cost=this.cost(v);return this.receivingSection(v).filter(id=>this.sim.network.edgeById.get(id).length>=21).every(id=>{const s=this.status(id);if(s.available<cost){this.closed.add(id);return false;}if(this.closed.has(id)){if(s.available<Math.min(s.capacity,Math.max(cost,this.refill)))return false;this.closed.delete(id);}return true;});}
+  canReserve(v){const cost=this.cost(v);return this.receivingSection(v).filter(id=>this.sim.network.edgeById.get(id).length>=21).every(id=>{
+    const s=this.status(id);
+    // A bus needing three slots must not close a receiver that can admit a car.
+    if(s.available<1){if(!this.closed.has(id)){this.closed.add(id);this.closedSince.set(id,this.sim.time);}return false;}
+    if(s.available<cost)return false;
+    if(this.closed.has(id)){
+      const waited=this.sim.time-(this.closedSince.get(id)??this.sim.time);
+      if(s.available<Math.min(s.capacity,Math.max(cost,this.refill))&&waited<this.refillWait)return false;
+      this.closed.delete(id);this.closedSince.delete(id);
+    }
+    return true;
+  });}
   reserve(v){if(this.reservations.has(v.id))return true;if(!this.canReserve(v))return false;const edges=this.receivingSection(v),cost=this.cost(v);if(!edges.length)return true;this.reservations.set(v.id,{edges:new Set(edges.filter(id=>this.sim.network.edgeById.get(id).length>=21)),cost});for(const id of this.reservations.get(v.id).edges)this.reservedByEdge.set(id,(this.reservedByEdge.get(id)??0)+cost);if(!this.reservations.get(v.id).edges.size)this.reservations.delete(v.id);this.admitted++;
     const forecast=this.section(v),last=this.sim.network.edgeById.get(forecast.at(-1)),receiver=this.sim.signals.get(last.to);if(receiver instanceof ActuatedSignal){const eta=this.sim.time+forecast.reduce((s,id)=>s+this.sim.network.edgeById.get(id).length,0)/((this.sim.options.waveSpeed??30)/3.6);receiver.notify(v.id,last.axis,eta);}return true;}
+  canEnter(v,id){const e=this.sim.network.edgeById.get(id);return e.length<21||this.reservations.get(v.id)?.edges.has(id)||this.status(id).available>=this.cost(v);}
   entered(v,id){const r=this.reservations.get(v.id);if(!r?.edges.delete(id))return;const remaining=(this.reservedByEdge.get(id)??0)-r.cost;if(remaining)this.reservedByEdge.set(id,remaining);else this.reservedByEdge.delete(id);if(!r.edges.size)this.reservations.delete(v.id);}
   release(v){const r=this.reservations.get(v.id);if(!r)return;for(const id of r.edges){const n=(this.reservedByEdge.get(id)??0)-r.cost;if(n)this.reservedByEdge.set(id,n);else this.reservedByEdge.delete(id);}this.reservations.delete(v.id);}
-  demand(id){const q={H:{count:0,open:0},V:{count:0,open:0}};for(const e of this.sim.network.incoming.get(id)){const lane=[...this.sim.lanes.get(e.id)].sort((a,b)=>b.p-a.p);for(const v of lane){if(e.length-v.p>180||this.sim.movementRule(e.id,v.path[v.index+1])?.signalBypass)continue;q[e.axis].count++;}const first=lane[0];if(first&&e.length-first.p<=180&&!this.sim.movementRule(e.id,first.path[first.index+1])?.signalBypass&&(this.reservations.has(first.id)||this.canReserve(first)))q[e.axis].open++;}return q;}
+  demand(id){const q={H:{count:0,open:0},V:{count:0,open:0}};for(const e of this.sim.network.incoming.get(id)){const lane=[...this.sim.lanes.get(e.id)].sort((a,b)=>b.p-a.p);for(const v of lane){if(e.length-v.p>180||this.sim.movementRule(e.id,v.path[v.index+1])?.signalBypass)continue;q[e.axis].count++;}const heads=new Map();for(const v of lane)if(!heads.has(v.lane??0))heads.set(v.lane??0,v);for(const first of heads.values())if(e.length-first.p<=180&&!this.sim.movementRule(e.id,first.path[first.index+1])?.signalBypass&&(this.reservations.has(first.id)||this.canReserve(first)))q[e.axis].open++;}return q;}
   rows(id){const ids=new Set(this.sim.network.outgoing.get(id).map(e=>e.id));for(const e of this.sim.network.incoming.get(id)){const v=[...this.sim.lanes.get(e.id)].sort((a,b)=>b.p-a.p)[0];if(v)for(const edge of this.receivingSection(v))ids.add(edge);}return [...ids].map(id=>this.status(id));}
 }

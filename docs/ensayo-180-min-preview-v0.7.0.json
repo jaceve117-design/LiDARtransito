@@ -1,0 +1,1249 @@
+{
+  "durationMinutes": 180,
+  "seed": 42,
+  "geometry": "preview local",
+  "options": {
+    "duration": 10800,
+    "demandMode": "estimated",
+    "startHour": 15,
+    "estimateYear": 2026,
+    "pirroShare": 75,
+    "seed": 42,
+    "cycle": 90,
+    "green": 35,
+    "coordinated": true,
+    "metered": true,
+    "waveSpeed": 30,
+    "distribute": true,
+    "blockingPercent": 15,
+    "trainEnabled": true,
+    "trainPeriod": 600,
+    "trainDuration": 45,
+    "trainOffset": 120,
+    "roadLayout": {
+      "version": 1,
+      "laneWidth": 3.25,
+      "approaches": {
+        "road-26-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-15-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-28-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-33-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-34-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-37-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-38-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-84-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-87-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-88-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-87-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-90-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-92-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-93-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-96-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-98-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-96-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-99-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-100-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-435-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-114-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-460-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-498-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-80-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-541-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-615-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-621-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-622-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-658-f": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-662-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        },
+        "road-663-r": {
+          "crosswalk": true,
+          "stopDistance": 6,
+          "crosswalkNear": 6,
+          "crosswalkWidth": 3,
+          "stopGap": 1.2,
+          "lineWidth": 0.4,
+          "poleBack": 10,
+          "poleSide": 1,
+          "confirmed": false
+        }
+      },
+      "nodes": {},
+      "roads": {},
+      "note": "Borrador de calibración. Posiciones y anchos no levantados en campo."
+    }
+  },
+  "checkpoints": [
+    {
+      "minutes": 15,
+      "completed": 156,
+      "completedIn15Minutes": 156,
+      "inNetwork": 276,
+      "pending": 66,
+      "moving": 194,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 17,
+          "greensIn15Minutes": 45
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 13,
+          "greensIn15Minutes": 14
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 900,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 900,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 296,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 285,
+          "greensIn15Minutes": 1
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 16,
+          "greensIn15Minutes": 17
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 4,
+          "greensIn15Minutes": 6
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 900,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 900,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 30,
+      "completed": 463,
+      "completedIn15Minutes": 307,
+      "inNetwork": 321,
+      "pending": 214,
+      "moving": 201,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "AMARILLO",
+          "retentionSeconds": 1,
+          "greensIn15Minutes": 50
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 1,
+          "greensIn15Minutes": 17
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 1800,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 1800,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 106,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 95,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "mh-726",
+          "state": "AMARILLO",
+          "retentionSeconds": 1,
+          "greensIn15Minutes": 26
+        },
+        {
+          "id": "av2-c20",
+          "state": "AMARILLO",
+          "retentionSeconds": 0,
+          "greensIn15Minutes": 7
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 1800,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 1800,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 45,
+      "completed": 765,
+      "completedIn15Minutes": 302,
+      "inNetwork": 336,
+      "pending": 396,
+      "moving": 173,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 5,
+          "greensIn15Minutes": 50
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 35,
+          "greensIn15Minutes": 15
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 2700,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 2700,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 388,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 377,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 10,
+          "greensIn15Minutes": 28
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 47,
+          "greensIn15Minutes": 8
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 2700,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 2700,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 60,
+      "completed": 1048,
+      "completedIn15Minutes": 283,
+      "inNetwork": 388,
+      "pending": 559,
+      "moving": 165,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 3,
+          "greensIn15Minutes": 49
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 50,
+          "greensIn15Minutes": 16
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 3600,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 3600,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 35,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 23,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 6,
+          "greensIn15Minutes": 25
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 18,
+          "greensIn15Minutes": 8
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 3600,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 3600,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 75,
+      "completed": 1353,
+      "completedIn15Minutes": 305,
+      "inNetwork": 391,
+      "pending": 746,
+      "moving": 186,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "AMARILLO",
+          "retentionSeconds": 0,
+          "greensIn15Minutes": 50
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 2,
+          "greensIn15Minutes": 19
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 4500,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 4500,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 158,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 148,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 23,
+          "greensIn15Minutes": 27
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 44,
+          "greensIn15Minutes": 8
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 4500,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 4500,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 90,
+      "completed": 1681,
+      "completedIn15Minutes": 328,
+      "inNetwork": 383,
+      "pending": 922,
+      "moving": 176,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 1,
+          "greensIn15Minutes": 52
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 27,
+          "greensIn15Minutes": 18
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 5400,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 5400,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 307,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 295,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 6,
+          "greensIn15Minutes": 25
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 141,
+          "greensIn15Minutes": 9
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 5400,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 5400,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 105,
+      "completed": 1991,
+      "completedIn15Minutes": 310,
+      "inNetwork": 382,
+      "pending": 1108,
+      "moving": 157,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 5,
+          "greensIn15Minutes": 52
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 36,
+          "greensIn15Minutes": 18
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 6300,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 6300,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 126,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 114,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 2,
+          "greensIn15Minutes": 26
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 63,
+          "greensIn15Minutes": 9
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 6300,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 6300,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 120,
+      "completed": 2293,
+      "completedIn15Minutes": 302,
+      "inNetwork": 400,
+      "pending": 1284,
+      "moving": 186,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 1,
+          "greensIn15Minutes": 52
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 3,
+          "greensIn15Minutes": 19
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 7200,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 7200,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 145,
+          "greensIn15Minutes": 4
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 135,
+          "greensIn15Minutes": 4
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 2,
+          "greensIn15Minutes": 26
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 27,
+          "greensIn15Minutes": 8
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 7200,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 7200,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 135,
+      "completed": 2605,
+      "completedIn15Minutes": 312,
+      "inNetwork": 392,
+      "pending": 1459,
+      "moving": 260,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 5,
+          "greensIn15Minutes": 51
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 17,
+          "greensIn15Minutes": 18
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 8100,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 8100,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 287,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 274,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 1,
+          "greensIn15Minutes": 29
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 109,
+          "greensIn15Minutes": 8
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 8100,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 8100,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 150,
+      "completed": 2915,
+      "completedIn15Minutes": 310,
+      "inNetwork": 383,
+      "pending": 1635,
+      "moving": 189,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 12,
+          "greensIn15Minutes": 51
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 30,
+          "greensIn15Minutes": 18
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 9000,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 9000,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 256,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 246,
+          "greensIn15Minutes": 2
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 0,
+          "greensIn15Minutes": 27
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 21,
+          "greensIn15Minutes": 10
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 9000,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 9000,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 165,
+      "completed": 3212,
+      "completedIn15Minutes": 297,
+      "inNetwork": 389,
+      "pending": 1810,
+      "moving": 165,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "AMARILLO",
+          "retentionSeconds": 1,
+          "greensIn15Minutes": 51
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 39,
+          "greensIn15Minutes": 18
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 9900,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 9900,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "VERDE",
+          "retentionSeconds": 69,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 57,
+          "greensIn15Minutes": 3
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 25,
+          "greensIn15Minutes": 28
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 71,
+          "greensIn15Minutes": 8
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 9900,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 9900,
+          "greensIn15Minutes": 0
+        }
+      ]
+    },
+    {
+      "minutes": 180,
+      "completed": 3517,
+      "completedIn15Minutes": 305,
+      "inNetwork": 385,
+      "pending": 1988,
+      "moving": 287,
+      "signals": [
+        {
+          "id": "pirro-sur",
+          "state": "VERDE",
+          "retentionSeconds": 2,
+          "greensIn15Minutes": 50
+        },
+        {
+          "id": "pirro",
+          "state": "VERDE",
+          "retentionSeconds": 9,
+          "greensIn15Minutes": 19
+        },
+        {
+          "id": "av4-c14",
+          "state": "VERDE",
+          "retentionSeconds": 10800,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c12",
+          "state": "VERDE",
+          "retentionSeconds": 10800,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av4-c8",
+          "state": "AMARILLO",
+          "retentionSeconds": 0,
+          "greensIn15Minutes": 1
+        },
+        {
+          "id": "av4-c6",
+          "state": "VERDE",
+          "retentionSeconds": 500,
+          "greensIn15Minutes": 1
+        },
+        {
+          "id": "mh-726",
+          "state": "VERDE",
+          "retentionSeconds": 10,
+          "greensIn15Minutes": 30
+        },
+        {
+          "id": "av2-c20",
+          "state": "VERDE",
+          "retentionSeconds": 80,
+          "greensIn15Minutes": 9
+        },
+        {
+          "id": "av1-c16",
+          "state": "VERDE",
+          "retentionSeconds": 10800,
+          "greensIn15Minutes": 0
+        },
+        {
+          "id": "av3-c16",
+          "state": "VERDE",
+          "retentionSeconds": 10800,
+          "greensIn15Minutes": 0
+        }
+      ]
+    }
+  ],
+  "final": {
+    "segundo": 10800,
+    "modo": "ADAPTATIVO",
+    "generados": 5890,
+    "cupos_retenidos": 0,
+    "cupos_reservados": 5,
+    "vehiculos_autorizados": 7281,
+    "dispersados_norte": 2218,
+    "dispersados_oeste": 993,
+    "dispersados_norte_salida": 770,
+    "dispersados_este": 455,
+    "en_red": 385,
+    "pendientes": 1988,
+    "salidas": 3517,
+    "cola": 2086,
+    "velocidad_kmh": 13.77,
+    "espera_media_s": 789.5,
+    "viaje_medio_s": 1368.79,
+    "ceda_esperando": 2,
+    "ceda_espera_vehiculo_segundos": 20427.4,
+    "tren_cerrado": 0,
+    "tren_esperando": 0,
+    "tren_espera_vehiculo_segundos": 2355.8,
+    "pirro_cola": 56,
+    "pirro_bloqueos": 0,
+    "pirro_bloqueo_segundos": 3660.2,
+    "cola_promedio": 1089.49
+  },
+  "limitations": [
+    "Resultados sintéticos. No validan el tráfico real.",
+    "La asignación este usa una salida noreste existente al no haber una ruta oriental sin regresar a Pirro.",
+    "No se eliminaron vehículos para liberar la red."
+  ]
+}

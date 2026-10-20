@@ -1,3 +1,4 @@
+import { layoutStopDistance } from './road-layout.js';
 import { CONFIG, createNetwork, shortestPath } from './network.js';
 import { ActuatedSignal,SpaceMeter } from './metering.js';
 import { demandSegments } from './traffic-demand.js';
@@ -28,14 +29,22 @@ export function createArrivals(network,options) {
 }
 // Requests are an estimated two-way Pirro-zone demand, not measured directional flows.
 export const DISPERSION_NODE='mh-50'; // Northern gateway beside Calle 7 / Avenida 5.
+export const RETURN_CORRIDOR_NODES=new Set(['pirro','pirro-sur','mh-31','mh-726']);
 export function createEstimatedArrivals(network,options){
   const random=rng(options.seed),arrivals=[],cache=new Map(),northOrigins=network.boundaries.filter(n=>n.canEnter&&(n.side==='S'&&n.x>950&&n.x<1350||n.side==='E'&&n.y>450&&n.y<850)),outOrigins=network.boundaries.filter(n=>n.canEnter&&(n.side==='N'||n.side==='O'));
   const exits=network.boundaries.filter(n=>n.canExit),southExits=exits.filter(n=>n.side==='S'&&n.x>950&&n.x<1350);
   const directions=[['O',options.dispersalWest??45],['N',options.dispersalNorth??35],['E',100-(options.dispersalWest??45)-(options.dispersalNorth??35)]];
   function route(origin,dest,waypoints,type){const key=[origin,dest,...waypoints,type].join(':');if(cache.has(key))return cache.get(key);let path=[],at=origin,last=null;
-    for(const target of [...waypoints,dest]){const leg=shortestPath(network,at,target,e=>last&&e.from===at&&e.to===last.from?Infinity:0,{vehicleType:type,incomingEdgeId:last?.id});if(!leg.length){cache.set(key,[]);return [];}path.push(...leg);last=network.edgeById.get(leg.at(-1));at=target;}cache.set(key,path);return path;}
+    for(const target of [...waypoints,dest]){const dispersing=at===DISPERSION_NODE;const leg=shortestPath(network,at,target,e=>(last&&e.from===at&&e.to===last.from||dispersing&&RETURN_CORRIDOR_NODES.has(e.to))?Infinity:0,{vehicleType:type,incomingEdgeId:last?.id});if(!leg.length){cache.set(key,[]);return [];}path.push(...leg);last=network.edgeById.get(leg.at(-1));at=target;}cache.set(key,path);return path;}
   // Build valid route pools once, including bus maneuver constraints.
-  const pools={};for(const type of ['car','bus']){pools[type]={north:[],out:[]};for(const [side,weight]of directions){if(weight<=0)continue;const routes=[];for(const origin of northOrigins)for(const dest of exits.filter(n=>n.side===side)){if(origin.id===dest.id)continue;const path=route(origin.id,dest.id,['pirro',DISPERSION_NODE],type);if(path.length)routes.push({origin:origin.id,destination:dest.id,initialPath:path,via:DISPERSION_NODE,direction:side});}if(!routes.length)throw Error('Sin salida conectada al '+side);pools[type].north.push({weight,routes});}
+  const pools={};for(const type of ['car','bus']){pools[type]={north:[],out:[]};for(const [side,weight]of directions){if(weight<=0)continue;const routes=[];let candidates=exits.filter(n=>n.side===side),northeastProxy=false;
+      if(side==='E'){
+        // The municipal graph's eastern stubs are south of Pirro. They require a
+        // loop back through La Casona, so use a real northeastern exit instead.
+        candidates=candidates.filter(n=>shortestPath(network,DISPERSION_NODE,n.id,e=>RETURN_CORRIDOR_NODES.has(e.to)?Infinity:0,{vehicleType:type}).length);
+        if(!candidates.length){const gateway=network.byId.get(DISPERSION_NODE);candidates=exits.filter(n=>n.x>gateway.x&&n.y<gateway.y&&n.side==='N');northeastProxy=true;}
+      }
+      for(const origin of northOrigins)for(const dest of candidates){if(origin.id===dest.id)continue;const path=route(origin.id,dest.id,['pirro',DISPERSION_NODE],type);if(path.length)routes.push({origin:origin.id,destination:dest.id,initialPath:path,via:DISPERSION_NODE,direction:side,northeastProxy});}if(!routes.length)throw Error('Sin salida conectada al '+side);pools[type].north.push({weight,routes});}
     for(const origin of outOrigins)for(const dest of southExits){const path=route(origin.id,dest.id,['mh-726'],type);if(path.length)pools[type].out.push({origin:origin.id,destination:dest.id,initialPath:path,via:'mh-726',direction:'S'});}if(!pools[type].out.length)throw Error('Sin ruta de salida hacia Miraflores');}
   let cumulative=0,id=1;
   for(const segment of demandSegments(options.startHour??15,options.duration,options.estimateYear??2026)){
@@ -80,7 +89,8 @@ export class Signal {
 }
 export class Simulation {
   constructor(options,adaptive=false,arrivals=null) {
-    this.options=options;this.adaptive=adaptive;this.network=createNetwork();
+    this.options=options;this.adaptive=adaptive;this.network=createNetwork(options.roadLayout);
+    this.realJunctions=new Set(this.network.nodes.filter(n=>n.signal||this.network.ruleByNode.has(n.id)||new Set([...this.network.incoming.get(n.id).map(e=>e.from),...this.network.outgoing.get(n.id).map(e=>e.to)]).size>=3).map(n=>n.id));this.crossingBlockMovements=new Map();
     this.arrivals=arrivals??createArrivals(this.network,options);this.cursor=0;this.time=0;
     this.plans=adaptive&&options.coordinated?coordinationPlans(this.network,options.waveSpeed??30,options.waveSource):null;
     this.signals=new Map(this.network.nodes.filter(n=>n.signal).map(n=>[n.id,this.plans?(options.metered?new ActuatedSignal(n,options,this.plans.get(n.id)):new CoordinatedSignal(n,options,this.plans.get(n.id))):new Signal(n,options,adaptive)]));
@@ -101,46 +111,48 @@ export class Simulation {
     const remaining=[];
     for(const a of this.pending) {
       const path=a.initialPath??this.path(a.origin,a.destination,a.via,a.type);a.initialPath=path;const lane=this.lanes.get(path[0]);
-      if(!path.length || lane.some(v=>v.p<CONFIG.carLength+CONFIG.minGap+1)){remaining.push(a);continue;}
-      lane.push({...a,path,index:0,p:0,v:0,wait:this.time-a.t,previousP:0,blocksBox:((Math.imul(a.id,2654435761)+this.options.seed)>>>0)%100<(this.options.blockingPercent??0),color:a.type==='bus'?'#1b668b':['#21775b','#d49743','#647488','#4b689c'][a.id%4]});this.activeLanes.add(path[0]);
+      if(!path.length || this.meter&&!this.meter.canEnter(a,path[0]) || this.entryLane(path[0])<0){remaining.push(a);continue;}
+      lane.push({...a,lane:this.entryLane(path[0]),path,index:0,p:0,v:0,wait:this.time-a.t,previousP:0,blocksBox:((Math.imul(a.id,2654435761)+this.options.seed)>>>0)%100<(this.options.blockingPercent??0),color:a.type==='bus'?'#1b668b':['#21775b','#d49743','#647488','#4b689c'][a.id%4]});this.activeLanes.add(path[0]);
     }
     this.pending=remaining;
     let queue=this.pending.length,stopped=0,blocked=0;
     const transfers=[];this.meter?.held.clear();
-    this.crossingBlocks.clear();this.yieldWaiters.clear();this.trainWaiters.clear();
+    this.crossingBlocks.clear();this.crossingBlockMovements.clear();this.yieldWaiters.clear();this.trainWaiters.clear();
     for(const [node,list] of this.junctionOccupancy){const active=list.filter(c=>c.until>this.time);if(active.length)this.junctionOccupancy.set(node,active);else this.junctionOccupancy.delete(node);}
-    for(const id of this.activeLanes){const edge=this.network.edgeById.get(id);if(!this.inFocus(edge.to))continue;for(const v of this.lanes.get(id)){const next=v.path[v.index+1];if(v.p>edge.length-CONFIG.stopDistance+.1&&v.v<.5&&next&&this.lanes.get(next).some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1))this.crossingBlocks.set(edge.to,id);}}
+    for(const id of this.activeLanes){const edge=this.network.edgeById.get(id);if(!this.inFocus(edge.to)||!this.realJunctions.has(edge.to))continue;for(const v of this.lanes.get(id)){const next=v.path[v.index+1];if(v.p>this.stopPosition(edge)+.1&&v.v<.5&&next&&this.entryLane(next,v.lane??0)<0){this.crossingBlocks.set(edge.to,id);if(!this.crossingBlockMovements.has(edge.to))this.crossingBlockMovements.set(edge.to,[]);this.crossingBlockMovements.get(edge.to).push({incoming:id,outgoing:next});}}}
     if(this.crossingBlocks.size)this.blockedSeconds+=dt;
     // Vehicles move front to back; downstream admission is resolved after all lanes move.
     for(const edgeId of [...this.activeLanes]) {
       const e=this.network.edgeById.get(edgeId);
-      const lane=this.lanes.get(e.id);lane.sort((a,b)=>b.p-a.p);let front=null;
+      const lane=this.lanes.get(e.id);lane.sort((a,b)=>b.p-a.p);const fronts=new Map();
       for(const v of lane) {
-        v.previousP=v.p;
+        v.previousP=v.p;const front=fronts.get(v.lane??0);
         let available=Math.min(e.length-v.p,front?front.p-CONFIG.carLength-CONFIG.minGap-v.p:Infinity);
         const signal=this.signals.get(e.to),phase=signal?.phase(this.time);
-        const stopPosition=Math.max(0,e.length-CONFIG.stopDistance);
-        const nextId=v.path[v.index+1],rule=this.movementRule(e.id,nextId);
-        if(signal&&!rule?.signalBypass&&v.p<=stopPosition+1e-7&&!(phase.axis===e.axis&&phase.phase==='VERDE'))available=Math.min(available,stopPosition-v.p);
-        if(rule&&v.p<=stopPosition+1e-7&&!this.yieldGap(rule)){available=Math.min(available,stopPosition-v.p);if(e.length-v.p<25)this.yieldWaiters.add(v.id);}
+        const stopPosition=this.stopPosition(e);
+        const nextId=v.path[v.index+1],rule=this.movementRule(e.id,nextId),control=this.options.roadLayout?.approaches?.[e.id]?.control??'inherit';
+        if(control==='stop'){v.stopDwell=(stopPosition-v.p<=.2&&v.v<.5)?(v.stopDwell??0)+dt:0;}
+        if((control==='stop'&&(v.stopDwell??0)<1||['stop','yield'].includes(control)&&!this.customGap(e,v))&&v.p<=stopPosition+1e-7)available=Math.min(available,stopPosition-v.p);
+        if(control==='inherit'&&signal&&!rule?.signalBypass&&v.p<=stopPosition+1e-7&&!(phase.axis===e.axis&&phase.phase==='VERDE'))available=Math.min(available,stopPosition-v.p);
+        if(control==='inherit'&&rule&&v.p<=stopPosition+1e-7&&!this.yieldGap(rule)){available=Math.min(available,stopPosition-v.p);if(e.length-v.p<25)this.yieldWaiters.add(v.id);}
         if(this.network.ruleByNode.get(e.to)?.rail&&this.trainClosed()){const trainStop=Math.max(0,e.length-18);if(v.p<=trainStop+1e-7){available=Math.min(available,trainStop-v.p);if(e.length-v.p<35)this.trainWaiters.add(v.id);}}
-        if(this.crossingBlocks.has(e.to)&&this.crossingBlocks.get(e.to)!==e.id&&v.p<=stopPosition+1e-7)available=Math.min(available,stopPosition-v.p);
+        if(this.boxConflicts(e.id,nextId)&&v.p<=stopPosition+1e-7)available=Math.min(available,stopPosition-v.p);
         const next=v.path[v.index+1];
         if(next) {
           const nextLane=this.lanes.get(next);
-          if(nextLane.some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1)){const hold=v.p>stopPosition+1e-7||v.blocksBox&&this.inFocus(e.to)?e.length-.6:stopPosition;available=Math.min(available,hold-v.p);if(e.length-v.p<15)blocked++;}
+          if(this.entryLane(next,v.lane??0)<0||this.meter&&!this.meter.canEnter(v,next)){const hold=v.p>stopPosition+1e-7||v.blocksBox&&this.inFocus(e.to)&&this.realJunctions.has(e.to)?e.length-.6:stopPosition;available=Math.min(available,hold-v.p);if(e.length-v.p<15)blocked++;}
         }
         // Reserve receiving storage before crossing the stop line, shared by all approaches.
         if(this.meter&&signal&&nextId&&v.p<=stopPosition+1e-7&&stopPosition-v.p<=CONFIG.speed*dt+1&&available>Math.max(0,stopPosition-v.p)&&v.meterPermit!==e.to){
-          if((!rule?.signalBypass&&signal.remaining===0)||!this.meter.reserve(v)){available=Math.min(available,stopPosition-v.p);this.meter.held.add(v.id);}
-          else {v.meterPermit=e.to;if(!rule?.signalBypass)signal.served(this.time);}
+          if((control==='inherit'&&!rule?.signalBypass&&signal.remaining===0)||!this.meter.reserve(v)){available=Math.min(available,stopPosition-v.p);this.meter.held.add(v.id);}
+          else {v.meterPermit=e.to;if(control==='inherit'&&!rule?.signalBypass)signal.served(this.time);}
         }
         if(this.meter&&signal&&nextId&&v.p<=stopPosition+1e-7&&e.length-v.p<25&&v.meterPermit!==e.to&&!this.meter.canReserve(v))this.meter.held.add(v.id);
         const target=Math.min(CONFIG.speed,Math.sqrt(Math.max(0,2*4.5*available)));
         v.v=Math.max(0,Math.min(CONFIG.speed,v.v+(v.v<target?2.2:-4.5)*dt));
         v.v=Math.min(v.v,Math.max(0,available)/dt);v.p+=v.v*dt;
-        if(v.previousP<=stopPosition&&v.p>stopPosition&&this.network.ruleByNode.has(e.to)){if(!this.junctionOccupancy.has(e.to))this.junctionOccupancy.set(e.to,[]);this.junctionOccupancy.get(e.to).push({incoming:e.id,outgoing:nextId,until:this.time+(e.length-v.p)/Math.max(1,v.v)+(v.type==='bus'?3:2)});}
-        if(v.v<.5){v.wait+=dt;stopped++;}else{this.yieldWaiters.delete(v.id);this.trainWaiters.delete(v.id);}front=v;
+        if(v.previousP<=stopPosition&&v.p>stopPosition&&(this.network.ruleByNode.has(e.to)||['stop','yield'].includes(control))){if(!this.junctionOccupancy.has(e.to))this.junctionOccupancy.set(e.to,[]);this.junctionOccupancy.get(e.to).push({incoming:e.id,outgoing:nextId,until:this.time+(e.length-v.p)/Math.max(1,v.v)+(v.type==='bus'?3:2)});}
+        if(v.v<.5){v.wait+=dt;stopped++;}else{this.yieldWaiters.delete(v.id);this.trainWaiters.delete(v.id);}fronts.set(v.lane??0,v);
         if(v.p>=e.length)transfers.push({v,e});
       }
     }
@@ -153,7 +165,7 @@ export class Simulation {
       let newPath=null;
       if(this.options.distribute && !this.meter?.reservations.has(v.id) && (!v.profile||!v.via) && !this.network.byId.get(e.to).boundary && v.path.slice(v.index+1,v.index+4).some(id=>this.lanes.get(id).filter(u=>u.v<.5).length>=3)) {
         // Re-route at junctions only. Prevent a U-turn onto the edge just traversed.
-        newPath=shortestPath(this.network,e.to,v.via??v.destination,n=>n.to===e.from?Infinity:this.lanes.get(n.id).length*1.8,{vehicleType:v.type,incomingEdgeId:e.id});
+        newPath=shortestPath(this.network,e.to,v.via??v.destination,n=>n.to===e.from||v.profile&&v.northbound&&!v.via&&RETURN_CORRIDOR_NODES.has(n.to)?Infinity:this.lanes.get(n.id).length*1.8,{vehicleType:v.type,incomingEdgeId:e.id});
         if(v.via&&newPath.length){const last=this.network.edgeById.get(newPath.at(-1));const exit=shortestPath(this.network,v.via,v.destination,n=>n.from===v.via&&n.to===last.from?Infinity:this.lanes.get(n.id).length*1.8,{vehicleType:v.type,incomingEdgeId:last.id});newPath=exit.length?[...newPath,...exit]:null;}
       }
       let nextId=newPath?.[0]??next;
@@ -161,9 +173,9 @@ export class Simulation {
       // A vehicle already inside a junction keeps its committed maneuver.
       if(nextId!==next&&(rerouteRule||oldRule)){newPath=null;nextId=next;}
       const nextLane=this.lanes.get(nextId);
-      if(nextLane.some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1)){v.p=e.length;v.v=0;continue;}
+      if(this.entryLane(nextId,v.lane??0)<0||this.meter&&!this.meter.canEnter(v,nextId)){v.p=e.length;v.v=0;continue;}
       lane.splice(lane.indexOf(v),1);if(!lane.length)this.activeLanes.delete(e.id);
-      v.previousEdge=e.id;
+      v.previousEdge=e.id;v.previousLane=v.lane??0;v.lane=this.entryLane(nextId,v.lane??0);delete v.stopDwell;
       if(newPath?.length){v.path=newPath;v.index=0;}else v.index++;
       this.meter?.entered(v,nextId);delete v.meterPermit;v.p=0;v.previousP=0;nextLane.push(v);this.activeLanes.add(nextId);
     }
@@ -174,6 +186,14 @@ export class Simulation {
     for(const [id,signal] of this.signals)this.meter?signal.update(this.time,dt,this):signal.update(this.time,dt,this.queuesAt(id),blockedAt(this,id));
     if(Math.floor(oldTime)<Math.floor(this.time))this.records.push(this.snapshot());
   }
+  laneCount(id){return this.options.roadLayout?.vector?(this.network.edgeById.get(id)?.laneCount??1):1;}
+  entryLane(id,preferred=null){if(!id||!this.lanes.has(id))return -1;const lane=this.lanes.get(id),count=this.laneCount(id);let best=-1,load=Infinity;for(const i of preferred===null?Array.from({length:count},(_,i)=>i):count?[Math.min(preferred,count-1)]:[]){const cars=lane.filter(v=>(v.lane??0)===i);if(cars.some(v=>v.p<CONFIG.carLength+CONFIG.minGap+1))continue;if(cars.length<load){best=i;load=cars.length;}}return best;}
+  customGap(edge,vehicle){if((this.junctionOccupancy.get(edge.to)??[]).some(c=>c.incoming!==edge.id&&movementsConflict(this.network,edge.id,vehicle.path[vehicle.index+1],c.incoming,c.outgoing)))return false;for(const other of this.network.incoming.get(edge.to)){if(other.id===edge.id)continue;for(const car of this.lanes.get(other.id)){const next=car.path[car.index+1];if(!next||!movementsConflict(this.network,edge.id,vehicle.path[vehicle.index+1],other.id,next))continue;const phase=this.signals.get(edge.to)?.phase(this.time),stop=this.stopPosition(other);if((this.options.roadLayout?.approaches?.[other.id]?.control??'inherit')==='inherit'&&phase&&car.p<=stop&&!(phase.phase==='VERDE'&&phase.axis===other.axis))continue;if(other.length-car.p<25&&(car.v>.5||car.id<vehicle.id&&car.p>=stop-.2))return false;}}return true;}
+  boxConflicts(incoming,outgoing){
+    const e=this.network.edgeById.get(incoming),blocks=this.crossingBlockMovements.get(e.to)??[];
+    return blocks.some(b=>b.incoming!==incoming&&movementsConflict(this.network,incoming,outgoing,b.incoming,b.outgoing));
+  }
+  stopPosition(edge){return Math.max(0,edge.length-layoutStopDistance(this.options.roadLayout,edge));}
   movementRule(incoming,outgoing){return this.network.yieldByIncoming.get(incoming)?.find(r=>!r.outgoing||r.outgoing===outgoing);}
   trainClosed(time=this.time){if(!this.options.trainEnabled)return false;const period=this.options.trainPeriod??600,duration=this.options.trainDuration??45,offset=this.options.trainOffset??120;return time>=offset&&(time-offset)%period<duration;}
   yieldGap(rule){
@@ -181,8 +201,8 @@ export class Simulation {
     const conflicts=this.junctionOccupancy.get(rule.node)??[];
     if(conflicts.some(c=>rule.priority.includes(c.incoming)||c.outgoing===rule.outgoing))return false;
     for(const id of rule.priority){const edge=this.network.edgeById.get(id),phase=this.signals.get(edge.to)?.phase(this.time);
-      for(const car of this.lanes.get(id)){const stop=Math.max(0,edge.length-CONFIG.stopDistance),distance=edge.length-car.p;
-        if(phase&&car.p<=stop+1e-7&&!(phase.axis===edge.axis&&phase.phase==='VERDE'))continue;
+      for(const car of this.lanes.get(id)){const stop=this.stopPosition(edge),distance=edge.length-car.p;
+        if((this.options.roadLayout?.approaches?.[edge.id]?.control??'inherit')==='inherit'&&phase&&car.p<=stop+1e-7&&!(phase.axis===edge.axis&&phase.phase==='VERDE'))continue;
         if(car.v<.5&&this.lanes.get(car.path[car.index+1])?.some(u=>u.p<CONFIG.carLength+CONFIG.minGap+1))continue;
         const eta=car.v>.5?distance/car.v:Math.sqrt(2*distance/2.2);if(eta<=gap)return false;
       }
@@ -203,5 +223,17 @@ export class Simulation {
   }
 }
 function blockedAt(sim,id){return sim.network.incoming.get(id).reduce((n,e)=>n+sim.lanes.get(e.id).filter(v=>e.length-v.p<10 && v.v<.5).length,0);}
-export function createPair(options){const net=createNetwork(),arrivals=createArrivals(net,options);return {fixed:new Simulation(options,false,arrivals),adaptive:new Simulation(options,true,arrivals)};}
+export function createPair(options){const net=createNetwork(options.roadLayout),arrivals=createArrivals(net,options);return {fixed:new Simulation(options,false,arrivals),adaptive:new Simulation(options,true,arrivals)};}
 export function csv(rows){if(!rows.length)return '';const keys=Object.keys(rows[0]),quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';return '\ufeff'+[keys.map(quote).join(','),...rows.map(r=>keys.map(k=>quote(r[k])).join(','))].join('\r\n');}
+
+// Geometric vertices are not intersections. At a real junction, straight traffic in
+// opposite directions uses separate lanes; a stopped queue does not cross that path.
+export function movementsConflict(network,incoming,outgoing,blockedIncoming,blockedOutgoing){
+ const a=network.edgeById.get(incoming),b=network.edgeById.get(blockedIncoming),ao=network.edgeById.get(outgoing),bo=network.edgeById.get(blockedOutgoing);
+ if(!a||!b||!ao||!bo||outgoing===blockedOutgoing)return true;
+ const direction=(edge,end)=>{const p=edge.points;for(let i=end?p.length-1:1;end?i>0:i<p.length;end?i--:i++){const x=p[i][0]-p[i-1][0],y=p[i][1]-p[i-1][1],d=Math.hypot(x,y);if(d>1e-9)return [x/d,y/d];}return [0,0];};
+ const dot=(u,v)=>u[0]*v[0]+u[1]*v[1],ad=direction(a,true),bd=direction(b,true);
+ const straightA=dot(ad,direction(ao,false))>Math.cos(Math.PI/6),straightB=dot(bd,direction(bo,false))>Math.cos(Math.PI/6);
+ if(straightA&&straightB&&dot(ad,bd)<-Math.cos(Math.PI/6))return false;
+ return true;
+}
