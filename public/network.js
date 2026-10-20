@@ -17,7 +17,7 @@ export function createNetwork(layout=null){
  const byId=new Map(nodes.map(n=>[n.id,n])),outgoing=new Map(nodes.map(n=>[n.id,[]])),incoming=new Map(nodes.map(n=>[n.id,[]]));
  for(const e of edges){outgoing.get(e.from).push(e);incoming.get(e.to).push(e);}
  if(layout?.vector)for(const n of nodes.filter(n=>n.boundary)){n.canEnter=outgoing.get(n.id).some(e=>e.laneCount>0);n.canExit=incoming.get(n.id).some(e=>e.laneCount>0);}
- const movementRules=MAP.movementRules,ruleByNode=new Map((movementRules?.junctions??[]).map(j=>[j.node,j])),yieldByIncoming=new Map(),busTurns=new Map();
+ const movementRules=layout?.vector&&layout.laneReference===1?{...MAP.movementRules,junctions:[...MAP.movementRules.junctions,{id:'north-terminal',node:'mh-57',label:'Final norte · ceda hacia oeste y derecha libre',yields:[{incoming:'road-54-f',outgoing:'road-58-f',priority:['road-57-r'],label:'Dos carriles a la izquierda ceden al tránsito desde el este'}]}]}:MAP.movementRules,ruleByNode=new Map((movementRules?.junctions??[]).map(j=>[j.node,j])),yieldByIncoming=new Map(),busTurns=new Map();
  for(const j of ruleByNode.values()){for(const rule of j.yields??[]){if(!yieldByIncoming.has(rule.incoming))yieldByIncoming.set(rule.incoming,[]);yieldByIncoming.get(rule.incoming).push({...rule,node:j.node});}for(const rule of j.busTurns??[])busTurns.set(rule.incoming,new Set(rule.outgoing));}
  return {movementRules,ruleByNode,yieldByIncoming,busTurns,focusZone:MAP.focusZone,nodes,edges,byId,outgoing,incoming,boundaries:nodes.filter(n=>n.boundary),edgeById:new Map(edges.map(e=>[e.id,e]))};
 }

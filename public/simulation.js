@@ -111,15 +111,15 @@ export class Simulation {
     const remaining=[];
     for(const a of this.pending) {
       const path=a.initialPath??this.path(a.origin,a.destination,a.via,a.type);a.initialPath=path;const lane=this.lanes.get(path[0]);
-      if(!path.length || this.meter&&!this.meter.canEnter(a,path[0]) || this.entryLane(path[0])<0){remaining.push(a);continue;}
-      lane.push({...a,lane:this.entryLane(path[0]),path,index:0,p:0,v:0,wait:this.time-a.t,previousP:0,blocksBox:((Math.imul(a.id,2654435761)+this.options.seed)>>>0)%100<(this.options.blockingPercent??0),color:a.type==='bus'?'#1b668b':['#21775b','#d49743','#647488','#4b689c'][a.id%4]});this.activeLanes.add(path[0]);
+      if(!path.length || this.meter&&!this.meter.canEnter(a,path[0]) || this.entryLane(path[0],null,path[1])<0){remaining.push(a);continue;}
+      lane.push({...a,lane:this.entryLane(path[0],null,path[1]),path,index:0,p:0,v:0,wait:this.time-a.t,previousP:0,blocksBox:((Math.imul(a.id,2654435761)+this.options.seed)>>>0)%100<(this.options.blockingPercent??0),color:a.type==='bus'?'#1b668b':['#21775b','#d49743','#647488','#4b689c'][a.id%4]});this.activeLanes.add(path[0]);
     }
     this.pending=remaining;
     let queue=this.pending.length,stopped=0,blocked=0;
     const transfers=[];this.meter?.held.clear();
     this.crossingBlocks.clear();this.crossingBlockMovements.clear();this.yieldWaiters.clear();this.trainWaiters.clear();
     for(const [node,list] of this.junctionOccupancy){const active=list.filter(c=>c.until>this.time);if(active.length)this.junctionOccupancy.set(node,active);else this.junctionOccupancy.delete(node);}
-    for(const id of this.activeLanes){const edge=this.network.edgeById.get(id);if(!this.inFocus(edge.to)||!this.realJunctions.has(edge.to))continue;for(const v of this.lanes.get(id)){const next=v.path[v.index+1];if(v.p>this.stopPosition(edge)+.1&&v.v<.5&&next&&this.entryLane(next,v.lane??0)<0){this.crossingBlocks.set(edge.to,id);if(!this.crossingBlockMovements.has(edge.to))this.crossingBlockMovements.set(edge.to,[]);this.crossingBlockMovements.get(edge.to).push({incoming:id,outgoing:next});}}}
+    for(const id of this.activeLanes){const edge=this.network.edgeById.get(id);if(!this.inFocus(edge.to)||!this.realJunctions.has(edge.to))continue;for(const v of this.lanes.get(id)){const next=v.path[v.index+1];if(v.p>this.stopPosition(edge)+.1&&v.v<.5&&next&&this.entryLane(next,v.lane??0,v.path[v.index+2])<0){this.crossingBlocks.set(edge.to,id);if(!this.crossingBlockMovements.has(edge.to))this.crossingBlockMovements.set(edge.to,[]);this.crossingBlockMovements.get(edge.to).push({incoming:id,outgoing:next});}}}
     if(this.crossingBlocks.size)this.blockedSeconds+=dt;
     // Vehicles move front to back; downstream admission is resolved after all lanes move.
     for(const edgeId of [...this.activeLanes]) {
@@ -140,7 +140,7 @@ export class Simulation {
         const next=v.path[v.index+1];
         if(next) {
           const nextLane=this.lanes.get(next);
-          if(this.entryLane(next,v.lane??0)<0||this.meter&&!this.meter.canEnter(v,next)){const hold=v.p>stopPosition+1e-7||v.blocksBox&&this.inFocus(e.to)&&this.realJunctions.has(e.to)?e.length-.6:stopPosition;available=Math.min(available,hold-v.p);if(e.length-v.p<15)blocked++;}
+          if(this.entryLane(next,v.lane??0,v.path[v.index+2])<0||this.meter&&!this.meter.canEnter(v,next)){const hold=v.p>stopPosition+1e-7||v.blocksBox&&this.inFocus(e.to)&&this.realJunctions.has(e.to)?e.length-.6:stopPosition;available=Math.min(available,hold-v.p);if(e.length-v.p<15)blocked++;}
         }
         // Reserve receiving storage before crossing the stop line, shared by all approaches.
         if(this.meter&&signal&&nextId&&v.p<=stopPosition+1e-7&&stopPosition-v.p<=CONFIG.speed*dt+1&&available>Math.max(0,stopPosition-v.p)&&v.meterPermit!==e.to){
@@ -171,11 +171,11 @@ export class Simulation {
       let nextId=newPath?.[0]??next;
       const rerouteRule=this.movementRule(e.id,nextId),oldRule=this.movementRule(e.id,next);
       // A vehicle already inside a junction keeps its committed maneuver.
-      if(nextId!==next&&(rerouteRule||oldRule)){newPath=null;nextId=next;}
+      if(nextId!==next&&(rerouteRule||oldRule||this.options.roadLayout?.laneTurns?.[e.id])){newPath=null;nextId=next;}
       const nextLane=this.lanes.get(nextId);
-      if(this.entryLane(nextId,v.lane??0)<0||this.meter&&!this.meter.canEnter(v,nextId)){v.p=e.length;v.v=0;continue;}
+      if(this.entryLane(nextId,v.lane??0,newPath?.[1]??v.path[v.index+2])<0||this.meter&&!this.meter.canEnter(v,nextId)){v.p=e.length;v.v=0;continue;}
       lane.splice(lane.indexOf(v),1);if(!lane.length)this.activeLanes.delete(e.id);
-      v.previousEdge=e.id;v.previousLane=v.lane??0;v.lane=this.entryLane(nextId,v.lane??0);delete v.stopDwell;
+      v.previousEdge=e.id;v.previousLane=v.lane??0;v.lane=this.entryLane(nextId,v.lane??0,newPath?.[1]??v.path[v.index+2]);delete v.stopDwell;
       if(newPath?.length){v.path=newPath;v.index=0;}else v.index++;
       this.meter?.entered(v,nextId);delete v.meterPermit;v.p=0;v.previousP=0;nextLane.push(v);this.activeLanes.add(nextId);
     }
@@ -187,7 +187,7 @@ export class Simulation {
     if(Math.floor(oldTime)<Math.floor(this.time))this.records.push(this.snapshot());
   }
   laneCount(id){return this.options.roadLayout?.vector?(this.network.edgeById.get(id)?.laneCount??1):1;}
-  entryLane(id,preferred=null){if(!id||!this.lanes.has(id))return -1;const lane=this.lanes.get(id),count=this.laneCount(id);let best=-1,load=Infinity;for(const i of preferred===null?Array.from({length:count},(_,i)=>i):count?[Math.min(preferred,count-1)]:[]){const cars=lane.filter(v=>(v.lane??0)===i);if(cars.some(v=>v.p<CONFIG.carLength+CONFIG.minGap+1))continue;if(cars.length<load){best=i;load=cars.length;}}return best;}
+  entryLane(id,preferred=null,next=null){if(!id||!this.lanes.has(id))return -1;const lane=this.lanes.get(id),count=this.laneCount(id);let best=-1,load=Infinity;const allowed=this.options.roadLayout?.laneTurns?.[id]?.[next];for(const i of allowed??(preferred===null?Array.from({length:count},(_,i)=>i):count?[Math.min(preferred,count-1)]:[])){if(i>=count)continue;const cars=lane.filter(v=>(v.lane??0)===i);if(cars.some(v=>v.p<CONFIG.carLength+CONFIG.minGap+1))continue;if(cars.length<load){best=i;load=cars.length;}}return best;}
   customGap(edge,vehicle){if((this.junctionOccupancy.get(edge.to)??[]).some(c=>c.incoming!==edge.id&&movementsConflict(this.network,edge.id,vehicle.path[vehicle.index+1],c.incoming,c.outgoing)))return false;for(const other of this.network.incoming.get(edge.to)){if(other.id===edge.id)continue;for(const car of this.lanes.get(other.id)){const next=car.path[car.index+1];if(!next||!movementsConflict(this.network,edge.id,vehicle.path[vehicle.index+1],other.id,next))continue;const phase=this.signals.get(edge.to)?.phase(this.time),stop=this.stopPosition(other);if((this.options.roadLayout?.approaches?.[other.id]?.control??'inherit')==='inherit'&&phase&&car.p<=stop&&!(phase.phase==='VERDE'&&phase.axis===other.axis))continue;if(other.length-car.p<25&&(car.v>.5||car.id<vehicle.id&&car.p>=stop-.2))return false;}}return true;}
   boxConflicts(incoming,outgoing){
     const e=this.network.edgeById.get(incoming),blocks=this.crossingBlockMovements.get(e.to)??[];

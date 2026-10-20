@@ -7,7 +7,7 @@ export function validateLayout(value,network){
  if(!value||value.version!==1||typeof value.approaches!=='object'||!value.approaches||typeof value.nodes!=='object'||!value.nodes||typeof value.roads!=='object'||!value.roads)throw Error('El archivo no es un ajuste vial compatible.');
  const v=structuredClone(value);if(!Number.isFinite(v.laneWidth)||v.laneWidth<2.5||v.laneWidth>4.5)throw Error('Ancho de carril: entre 2,5 y 4,5 m.');
  v.streets??={};if(typeof v.streets!=='object'||Array.isArray(v.streets))throw Error('Configuración de calles inválida.');
- for(const [id,r]of Object.entries(v.streets)){if(!network.edges.some(e=>e.roadId===id&&(e.from===r.from||e.to===r.from))||![r.forward,r.reverse].every(n=>Number.isInteger(n)&&n>=0&&n<=3)||r.forward+r.reverse<1||!Number.isFinite(r.width)||r.width<2.5||r.width>4.5)throw Error('Carriles o ancho inválidos: '+id);}
+ for(const [id,r]of Object.entries(v.streets)){if(!network.edges.some(e=>e.roadId===id&&(e.from===r.from||e.to===r.from))||![r.forward,r.reverse].every(n=>Number.isInteger(n)&&n>=0&&n<=3)||r.forward+r.reverse<0||!Number.isFinite(r.width)||r.width<2.5||r.width>4.5)throw Error('Carriles o ancho inválidos: '+id);}
  const checkedNetwork=v.vector?createNetwork(v):network;
  for(const [id,a]of Object.entries(v.approaches)){
   const e=checkedNetwork.edgeById.get(id);if(!e)throw Error('Acceso desconocido: '+id);v.approaches[id]={...defaultApproach(e),...a};
